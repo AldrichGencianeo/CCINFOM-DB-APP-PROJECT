@@ -35,19 +35,19 @@ VALUES
 -- ===============================
 -- VENUE & SECTION TABLE
 -- ===============================
-INSERT INTO venue_and_section (sectionID, venuename, sectionname, price, availableslots)
+INSERT INTO section (sectionID, sectionname, price, availableslots)
 VALUES
-(3000, 'Araneta Coliseum', 'VIP', 550.00, 100),
-(3001, 'Araneta Coliseum', 'Regular', 300.00,  400),
-(3002, 'Samsung Performing Arts Theater', 'VIP', 950.00, 150),
-(3003, 'Samsung Performing Arts Theater', 'Balcony', 150.00, 300),
-(3004, 'SM Mall of Asia Arena', 'VIP', 850.00, 200),
-(3005, 'SM Mall of Asia Arena', 'Upper Box', 300.00, 600);
+(3000, 'VIP', 950.00, 100),
+(3001, 'Regular', 300.00,  400),
+(3002, 'VIP', 950.00, 150),
+(3003, 'Balcony', 150.00, 300),
+(3004, 'VIP', 950.00, 200),
+(3005, 'Upper Box', 300.00, 600);
 
 -- ===============================
 -- MERCHANDISE TABLE
 -- ===============================
-INSERT INTO merchandise (merchandiseID, merchandisename, category, price, qty)
+INSERT INTO merchandise (merchandiseID, merchandisename, category, price, stock)
 VALUES
 (4000, 'Official Event T-Shirt', 'Clothing', 750.00, 150),
 (4001, 'Event Poster', 'Collectible', 250.00, 200),
@@ -55,3 +55,8 @@ VALUES
 (4003, 'Signed Album', 'Music', 1200.00, 50),
 (4004, 'Light Stick', 'Accessory', 900.00, 80),
 (4005, 'Event Tote Bag', 'Clothing', 400.00, 120);
+
+SELECT * FROM events;
+SELECT * FROM customers;
+SELECT * FROM section;
+SELECT * FROM merchandise;
