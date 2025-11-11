@@ -5,21 +5,21 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 -- -----------------------------------------------------
--- Schema mydb
+-- Schema dbapp
 -- -----------------------------------------------------
 
 -- -----------------------------------------------------
--- Schema mydb
+-- Schema dbapp
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8 ;
-USE `mydb` ;
+CREATE SCHEMA IF NOT EXISTS `dbapp` DEFAULT CHARACTER SET utf8 ;
+USE `dbapp` ;
 
 -- -----------------------------------------------------
--- Table `mydb`.`Events`
+-- Table `dbapp`.`Events`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `mydb`.`Events` ;
+DROP TABLE IF EXISTS `dbapp`.`Events` ;
 
-CREATE TABLE IF NOT EXISTS `mydb`.`Events` (
+CREATE TABLE IF NOT EXISTS `dbapp`.`Events` (
   `eventID` INT NOT NULL AUTO_INCREMENT,
   `eventname` VARCHAR(50) NOT NULL,
   `eventtype` VARCHAR(20) NOT NULL,
@@ -29,11 +29,11 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`Merchandise`
+-- Table `dbapp`.`Merchandise`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `mydb`.`Merchandise` ;
+DROP TABLE IF EXISTS `dbapp`.`Merchandise` ;
 
-CREATE TABLE IF NOT EXISTS `mydb`.`Merchandise` (
+CREATE TABLE IF NOT EXISTS `dbapp`.`Merchandise` (
   `merchandiseID` INT NOT NULL AUTO_INCREMENT,
   `merchandisename` VARCHAR(50) NOT NULL,
   `category` ENUM('Clothing', 'Collectible', 'Music', 'Accessory') NOT NULL,
@@ -44,11 +44,11 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`Section`
+-- Table `dbapp`.`Section`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `mydb`.`Section` ;
+DROP TABLE IF EXISTS `dbapp`.`Section` ;
 
-CREATE TABLE IF NOT EXISTS `mydb`.`Section` (
+CREATE TABLE IF NOT EXISTS `dbapp`.`Section` (
   `sectionID` INT NOT NULL AUTO_INCREMENT,
   `sectionname` VARCHAR(10) NOT NULL,
   `price` DECIMAL(7,2) NOT NULL,
@@ -58,11 +58,11 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`Event_Merch`
+-- Table `dbapp`.`Event_Merch`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `mydb`.`Event_Merch` ;
+DROP TABLE IF EXISTS `dbapp`.`Event_Merch` ;
 
-CREATE TABLE IF NOT EXISTS `mydb`.`Event_Merch` (
+CREATE TABLE IF NOT EXISTS `dbapp`.`Event_Merch` (
   `eventID` INT NOT NULL,
   `merchandiseID` INT NOT NULL,
   `merchtype` ENUM('Package', 'Addon') NOT NULL,
@@ -71,23 +71,23 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Event_Merch` (
   INDEX `fk_Events_has_Merchandise_Events_idx` (`eventID` ASC) VISIBLE,
   CONSTRAINT `fk_Events_has_Merchandise_Events`
     FOREIGN KEY (`eventID`)
-    REFERENCES `mydb`.`Events` (`eventID`)
+    REFERENCES `dbapp`.`Events` (`eventID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_Events_has_Merchandise_Merchandise1`
     FOREIGN KEY (`merchandiseID`)
-    REFERENCES `mydb`.`Merchandise` (`merchandiseID`)
+    REFERENCES `dbapp`.`Merchandise` (`merchandiseID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`Schedules`
+-- Table `dbapp`.`Schedules`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `mydb`.`Schedules` ;
+DROP TABLE IF EXISTS `dbapp`.`Schedules` ;
 
-CREATE TABLE IF NOT EXISTS `mydb`.`Schedules` (
+CREATE TABLE IF NOT EXISTS `dbapp`.`Schedules` (
   `eventID` INT NOT NULL,
   `sectionID` INT NOT NULL,
   `scheduleID` INT NOT NULL AUTO_INCREMENT,
@@ -100,23 +100,23 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Schedules` (
   INDEX `fk_Schedules_Venue and Section1_idx` (`sectionID` ASC) VISIBLE,
   CONSTRAINT `fk_Schedules_Events1`
     FOREIGN KEY (`eventID`)
-    REFERENCES `mydb`.`Events` (`eventID`)
+    REFERENCES `dbapp`.`Events` (`eventID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_Schedules_Venue and Section1`
     FOREIGN KEY (`sectionID`)
-    REFERENCES `mydb`.`Section` (`sectionID`)
+    REFERENCES `dbapp`.`Section` (`sectionID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`Customers`
+-- Table `dbapp`.`Customers`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `mydb`.`Customers` ;
+DROP TABLE IF EXISTS `dbapp`.`Customers` ;
 
-CREATE TABLE IF NOT EXISTS `mydb`.`Customers` (
+CREATE TABLE IF NOT EXISTS `dbapp`.`Customers` (
   `customerID` INT NOT NULL AUTO_INCREMENT,
   `firstName` VARCHAR(50) NULL,
   `lastName` VARCHAR(50) NULL,
@@ -128,11 +128,11 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`Tickets`
+-- Table `dbapp`.`Tickets`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `mydb`.`Tickets` ;
+DROP TABLE IF EXISTS `dbapp`.`Tickets` ;
 
-CREATE TABLE IF NOT EXISTS `mydb`.`Tickets` (
+CREATE TABLE IF NOT EXISTS `dbapp`.`Tickets` (
   `ticketID` INT NOT NULL AUTO_INCREMENT,
   `scheduleID` INT NOT NULL,
   `customerID` INT NOT NULL,
@@ -144,23 +144,23 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Tickets` (
   INDEX `fk_Tickets_Customers1_idx` (`customerID` ASC) VISIBLE,
   CONSTRAINT `fk_Tickets_Schedules1`
     FOREIGN KEY (`scheduleID`)
-    REFERENCES `mydb`.`Schedules` (`scheduleID`)
+    REFERENCES `dbapp`.`Schedules` (`scheduleID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_Tickets_Customers1`
     FOREIGN KEY (`customerID`)
-    REFERENCES `mydb`.`Customers` (`customerID`)
+    REFERENCES `dbapp`.`Customers` (`customerID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `mydb`.`Merch_Receipt`
+-- Table `dbapp`.`Merch_Receipt`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `mydb`.`Merch_Receipt` ;
+DROP TABLE IF EXISTS `dbapp`.`Merch_Receipt` ;
 
-CREATE TABLE IF NOT EXISTS `mydb`.`Merch_Receipt` (
+CREATE TABLE IF NOT EXISTS `dbapp`.`Merch_Receipt` (
   `customerID` INT NOT NULL,
   `eventID` INT NOT NULL,
   `merchandiseID` INT NOT NULL,
@@ -173,12 +173,12 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Merch_Receipt` (
   UNIQUE INDEX `receiptID_UNIQUE` (`receiptID` ASC) VISIBLE,
   CONSTRAINT `fk_Merch_Receipt_Customers1`
     FOREIGN KEY (`customerID`)
-    REFERENCES `mydb`.`Customers` (`customerID`)
+    REFERENCES `dbapp`.`Customers` (`customerID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_Merch_Receipt_Event_Merch1`
     FOREIGN KEY (`eventID` , `merchandiseID`)
-    REFERENCES `mydb`.`Event_Merch` (`eventID` , `merchandiseID`)
+    REFERENCES `dbapp`.`Event_Merch` (`eventID` , `merchandiseID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
