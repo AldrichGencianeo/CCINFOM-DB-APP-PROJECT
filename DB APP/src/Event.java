@@ -14,14 +14,17 @@ public class Event {
     }
 
     public int getEventID() {
+
         return eventID;
     }
 
     public String getEventName() {
+
         return eventName;
     }
 
     public String getEventType() {
+
         return eventType;
     }
 
@@ -30,18 +33,22 @@ public class Event {
     }
 
     public void setEventID(int eventID) {
+
         this.eventID = eventID;
     }
 
     public void setEventName(String eventName) {
+
         this.eventName = eventName;
     }
 
     public void setEventType(String eventType) {
+
         this.eventType = eventType;
     }
 
     public void setBookingFee(double bookingFee) {
+
         this.bookingFee = bookingFee;
     }
 
