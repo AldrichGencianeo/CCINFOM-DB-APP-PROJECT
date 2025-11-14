@@ -56,6 +56,31 @@ VALUES
 (4004, 'Light Stick', 'Accessory', 900.00, 80),
 (4005, 'Event Tote Bag', 'Clothing', 400.00, 120);
 
+-- ===============================
+-- SCHEDULES TABLE
+-- ===============================
+INSERT INTO schedules (scheduleID, eventID, scheduleDate, startTime, endTime)
+VALUES
+(5000, 2000, '2025-12-15', '19:00:00', '22:00:00'),
+(5001, 2000, '2025-12-16', '19:00:00', '22:00:00'),
+(5002, 2001, '2025-12-20', '20:00:00', '23:00:00'),
+(5003, 2002, '2025-11-25', '18:00:00', '23:00:00'),
+(5004, 2003, '2025-12-10', '19:30:00', '22:30:00');
+
+-- ===============================
+-- SCHEDULE_SECTION TABLE
+-- ===============================
+INSERT INTO schedule_section (scheduleID, sectionID, availableSlots)
+VALUES
+(5000, 3000, 100),
+(5000, 3001, 400),
+(5001, 3000, 100),
+(5001, 3001, 400),
+(5002, 3002, 150),
+(5002, 3003, 300),
+(5003, 3004, 200),
+(5004, 3005, 600);
+
 SELECT * FROM events;
 SELECT * FROM customers;
 SELECT * FROM section;

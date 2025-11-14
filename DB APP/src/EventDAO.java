@@ -97,12 +97,13 @@ public class EventDAO {
         System.out.println();
 
         String query = """
-                SELECT s.scheduleID, s.scheduleDate, s.startTime, s.endTime, 
-                       s.status, sec.sectionname, sec.price, sec.availableslots
+                SELECT s.scheduleID, s.scheduleDate, s.startTime, s.endTime,
+                       sec.sectionname, sec.price, sec.capacity, ss.availableSlots
                 FROM schedules s
-                JOIN section sec ON s.sectionID = sec.sectionID
+                LEFT JOIN schedule_section ss ON s.scheduleID = ss.scheduleID
+                LEFT JOIN section sec ON ss.sectionID = sec.sectionID
                 WHERE s.eventID = ?
-                ORDER BY s.scheduleDate, s.startTime
+                ORDER BY s.scheduleDate, s.startTime, sec.sectionname
                 """;
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -118,17 +119,21 @@ public class EventDAO {
                 Date scheduleDate = resultSet.getDate("scheduleDate");
                 Time startTime = resultSet.getTime("startTime");
                 Time endTime = resultSet.getTime("endTime");
-                String status = resultSet.getString("status");
                 String sectionName = resultSet.getString("sectionname");
-                double sectionPrice = resultSet.getDouble("price");
-                int availableSlots = resultSet.getInt("availableslots");
-
-                String statusText = status.equals("A") ? "Available" : "Full";
+                Double sectionPrice = resultSet.getObject("price", Double.class);
+                Integer capacity = resultSet.getObject("capacity", Integer.class);
+                Integer availableSlots = resultSet.getObject("availableSlots", Integer.class);
 
                 System.out.printf("Schedule ID: %d | Date: %s | Time: %s - %s%n",
                         scheduleID, scheduleDate, startTime, endTime);
-                System.out.printf("  Section: %s | Price: %.2f | Status: %s | Available Slots: %d%n",
-                        sectionName, sectionPrice, statusText, availableSlots);
+
+                if (sectionName != null) {
+                    System.out.printf("  Section: %s | Price: %.2f | Capacity: %d | Available Slots: %s%n",
+                            sectionName, sectionPrice, capacity,
+                            availableSlots != null ? availableSlots : "N/A");
+                } else {
+                    System.out.println("  No sections assigned to this schedule yet.");
+                }
                 System.out.println();
             }
 
