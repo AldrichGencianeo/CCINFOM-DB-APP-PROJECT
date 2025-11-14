@@ -51,8 +51,8 @@ DROP TABLE IF EXISTS `dbapp`.`Section` ;
 CREATE TABLE IF NOT EXISTS `dbapp`.`Section` (
   `sectionID` INT NOT NULL AUTO_INCREMENT,
   `sectionname` VARCHAR(10) NOT NULL,
+  `capacity` INT NOT NULL,
   `price` DECIMAL(7,2) NOT NULL,
-  `availableslots` INT NOT NULL,
   PRIMARY KEY (`sectionID`))
 ENGINE = InnoDB;
 
@@ -89,23 +89,15 @@ DROP TABLE IF EXISTS `dbapp`.`Schedules` ;
 
 CREATE TABLE IF NOT EXISTS `dbapp`.`Schedules` (
   `eventID` INT NOT NULL,
-  `sectionID` INT NOT NULL,
   `scheduleID` INT NOT NULL AUTO_INCREMENT,
   `scheduleDate` DATE NOT NULL,
   `startTime` TIME NOT NULL,
   `endTime` TIME NOT NULL,
-  `status` ENUM('F', 'A') NOT NULL COMMENT 'F = Full\nA = Available',
   INDEX `fk_Schedules_Events1_idx` (`eventID` ASC) VISIBLE,
   PRIMARY KEY (`scheduleID`),
-  INDEX `fk_Schedules_Venue and Section1_idx` (`sectionID` ASC) VISIBLE,
   CONSTRAINT `fk_Schedules_Events1`
     FOREIGN KEY (`eventID`)
     REFERENCES `dbapp`.`Events` (`eventID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Schedules_Venue and Section1`
-    FOREIGN KEY (`sectionID`)
-    REFERENCES `dbapp`.`Section` (`sectionID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -128,28 +120,56 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `dbapp`.`Schedule_Section`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `dbapp`.`Schedule_Section` ;
+
+CREATE TABLE IF NOT EXISTS `dbapp`.`Schedule_Section` (
+  `scheduleID` INT NOT NULL,
+  `sectionID` INT NOT NULL,
+  `availableSlots` INT NULL,
+  INDEX `fk_Schedule_Section_Section1_idx` (`sectionID` ASC) VISIBLE,
+  INDEX `fk_Schedule_Section_Schedules1_idx` (`scheduleID` ASC) VISIBLE,
+  PRIMARY KEY (`scheduleID`, `sectionID`),
+  UNIQUE INDEX `scheduleID_UNIQUE` (`scheduleID` ASC) VISIBLE,
+  UNIQUE INDEX `sectionID_UNIQUE` (`sectionID` ASC) VISIBLE,
+  CONSTRAINT `fk_Schedule_Section_Section1`
+    FOREIGN KEY (`sectionID`)
+    REFERENCES `dbapp`.`Section` (`sectionID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Schedule_Section_Schedules1`
+    FOREIGN KEY (`scheduleID`)
+    REFERENCES `dbapp`.`Schedules` (`scheduleID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `dbapp`.`Tickets`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `dbapp`.`Tickets` ;
 
 CREATE TABLE IF NOT EXISTS `dbapp`.`Tickets` (
   `ticketID` INT NOT NULL AUTO_INCREMENT,
-  `scheduleID` INT NOT NULL,
   `customerID` INT NOT NULL,
-  `purchaseDate` DATETIME NULL,
+  `scheduleID` INT NOT NULL,
+  `sectionID` INT NOT NULL,
+  `purchaseDate` DATETIME NOT NULL,
   `ticketPrice` DECIMAL(7,2) NOT NULL,
   `status` ENUM('P', 'CO', 'CA') NOT NULL COMMENT 'P = Pending\nCO = Confirmed\nCA = Cancelled',
   PRIMARY KEY (`ticketID`),
-  INDEX `fk_Tickets_Schedules1_idx` (`scheduleID` ASC) VISIBLE,
   INDEX `fk_Tickets_Customers1_idx` (`customerID` ASC) VISIBLE,
-  CONSTRAINT `fk_Tickets_Schedules1`
-    FOREIGN KEY (`scheduleID`)
-    REFERENCES `dbapp`.`Schedules` (`scheduleID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+  INDEX `fk_Tickets_Schedule_Section1_idx` (`scheduleID` ASC, `sectionID` ASC) VISIBLE,
   CONSTRAINT `fk_Tickets_Customers1`
     FOREIGN KEY (`customerID`)
     REFERENCES `dbapp`.`Customers` (`customerID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Tickets_Schedule_Section1`
+    FOREIGN KEY (`scheduleID` , `sectionID`)
+    REFERENCES `dbapp`.`Schedule_Section` (`scheduleID` , `sectionID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -165,7 +185,7 @@ CREATE TABLE IF NOT EXISTS `dbapp`.`Merch_Receipt` (
   `eventID` INT NOT NULL,
   `merchandiseID` INT NOT NULL,
   `quantity` INT NOT NULL,
-  `totalprice` DATE NOT NULL,
+  `totalprice` DECIMAL(7,2) NOT NULL,
   `receiptID` INT NOT NULL AUTO_INCREMENT,
   INDEX `fk_Merch_Receipt_Customers1_idx` (`customerID` ASC) VISIBLE,
   INDEX `fk_Merch_Receipt_Event_Merch1_idx` (`eventID` ASC, `merchandiseID` ASC) VISIBLE,
