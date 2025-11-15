@@ -81,6 +81,32 @@ VALUES
 (5003, 3004, 200),
 (5004, 3005, 600);
 
+-- ===============================
+-- EVENT_MERCH TABLE (Link merchandise to events)
+-- ===============================
+INSERT INTO event_merch (eventID, merchandiseID, merchtype)
+VALUES
+-- Harmony Nights (Concert)
+(2000, 4000, 'Package'),   -- T-Shirt
+(2000, 4001, 'Addon'),     -- Poster
+(2000, 4003, 'Package'),   -- Signed Album
+(2000, 4004, 'Addon'),     -- Light Stick
+
+-- Phantom of the Opera (Theater)
+(2001, 4000, 'Package'),   -- T-Shirt
+(2001, 4001, 'Addon'),     -- Poster
+(2001, 4005, 'Addon'),     -- Tote Bag
+
+-- RockFest 2025 (Concert)
+(2002, 4000, 'Package'),   -- T-Shirt
+(2002, 4003, 'Package'),   -- Signed Album
+(2002, 4004, 'Addon'),     -- Light Stick
+
+-- Broadway Reimagined (Theater)
+(2003, 4001, 'Addon'),     -- Poster
+(2003, 4002, 'Package'),   -- VIP Lanyard
+(2003, 4005, 'Addon');     -- Tote Bag
+
 SELECT * FROM events;
 SELECT * FROM customers;
 SELECT * FROM section;
