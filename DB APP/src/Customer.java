@@ -42,7 +42,6 @@ public class Customer {
         return balance;
     }
 
-    // Setters
     public void setCustomerID(int customerID) {
         this.customerID = customerID;
     }

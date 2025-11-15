@@ -82,32 +82,59 @@ VALUES
 (5004, 3005, 600);
 
 -- ===============================
--- EVENT_MERCH TABLE (Link merchandise to events)
+-- EVENT_MERCH TABLE
 -- ===============================
 INSERT INTO event_merch (eventID, merchandiseID, merchtype)
 VALUES
--- Harmony Nights (Concert)
-(2000, 4000, 'Package'),   -- T-Shirt
-(2000, 4001, 'Addon'),     -- Poster
-(2000, 4003, 'Package'),   -- Signed Album
-(2000, 4004, 'Addon'),     -- Light Stick
+-- Harmony Nights (Concert) - Event 2000
+(2000, 4000, 'Package'),   -- T-Shirt as Package
+(2000, 4001, 'Addon'),     -- Poster as Addon
+(2000, 4003, 'Package'),   -- Signed Album as Package
+(2000, 4004, 'Addon'),     -- Light Stick as Addon
 
--- Phantom of the Opera (Theater)
-(2001, 4000, 'Package'),   -- T-Shirt
-(2001, 4001, 'Addon'),     -- Poster
-(2001, 4005, 'Addon'),     -- Tote Bag
+-- Phantom of the Opera (Theater) - Event 2001
+(2001, 4000, 'Package'),   -- T-Shirt as Package
+(2001, 4001, 'Addon'),     -- Poster as Addon
+(2001, 4005, 'Addon'),     -- Tote Bag as Addon
 
--- RockFest 2025 (Concert)
-(2002, 4000, 'Package'),   -- T-Shirt
-(2002, 4003, 'Package'),   -- Signed Album
-(2002, 4004, 'Addon'),     -- Light Stick
+-- RockFest 2025 (Concert) - Event 2002
+(2002, 4000, 'Package'),   -- T-Shirt as Package
+(2002, 4003, 'Package'),   -- Signed Album as Package
+(2002, 4004, 'Addon'),     -- Light Stick as Addon
 
--- Broadway Reimagined (Theater)
-(2003, 4001, 'Addon'),     -- Poster
-(2003, 4002, 'Package'),   -- VIP Lanyard
-(2003, 4005, 'Addon');     -- Tote Bag
+-- Broadway Reimagined (Theater) - Event 2003
+(2003, 4001, 'Addon'),     -- Poster as Addon
+(2003, 4002, 'Package'),   -- VIP Lanyard as Package
+(2003, 4005, 'Addon'),     -- Tote Bag as Addon
+
+-- Symphony of Lights (Concert) - Event 2004
+(2004, 4000, 'Package'),   -- T-Shirt as Package
+(2004, 4004, 'Addon'),     -- Light Stick as Addon
+
+-- Elvis Comeback Special (Concert) - Event 2005
+(2005, 4000, 'Package'),   -- T-Shirt as Package
+(2005, 4003, 'Package'),   -- Signed Album as Package
+
+-- You Can't Take It With You (Theater) - Event 2006
+(2006, 4001, 'Addon'),     -- Poster as Addon
+(2006, 4005, 'Addon'),     -- Tote Bag as Addon
+
+-- Cream Farewell Tour (Concert) - Event 2007
+(2007, 4000, 'Package'),   -- T-Shirt as Package
+(2007, 4003, 'Package'),   -- Signed Album as Package
+
+-- Arsenic and Old Lace (Theater) - Event 2008
+(2008, 4001, 'Addon'),     -- Poster as Addon
+(2008, 4002, 'Package'),   -- VIP Lanyard as Package
+
+-- Led Zeppelin World Tour (Concert) - Event 2009
+(2009, 4000, 'Package'),   -- T-Shirt as Package
+(2009, 4003, 'Package'),   -- Signed Album as Package
+(2009, 4004, 'Addon');     -- Light Stick as Addon
 
 SELECT * FROM events;
 SELECT * FROM customers;
 SELECT * FROM section;
 SELECT * FROM merchandise;
+SELECT * FROM event_merch;
+SELECT * FROM schedules ORDER BY scheduleDate;
