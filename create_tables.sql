@@ -181,16 +181,23 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `dbapp`.`Merch_Receipt` ;
 
 CREATE TABLE IF NOT EXISTS `dbapp`.`Merch_Receipt` (
+  `ticketID` INT,
   `customerID` INT NOT NULL,
   `eventID` INT NOT NULL,
   `merchandiseID` INT NOT NULL,
   `quantity` INT NOT NULL,
   `totalprice` DECIMAL(7,2) NOT NULL,
   `receiptID` INT NOT NULL AUTO_INCREMENT,
+  INDEX `fk_Merch_Receipt_Tickets1_idx` (`ticketID` ASC) VISIBLE,
   INDEX `fk_Merch_Receipt_Customers1_idx` (`customerID` ASC) VISIBLE,
   INDEX `fk_Merch_Receipt_Event_Merch1_idx` (`eventID` ASC, `merchandiseID` ASC) VISIBLE,
   PRIMARY KEY (`receiptID`),
   UNIQUE INDEX `receiptID_UNIQUE` (`receiptID` ASC) VISIBLE,
+  CONSTRAINT `fk_Merch_Receipt_Tickets1`
+	FOREIGN KEY (`ticketID`)
+    REFERENCES `dbapp`.`Tickets` (`ticketID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
   CONSTRAINT `fk_Merch_Receipt_Customers1`
     FOREIGN KEY (`customerID`)
     REFERENCES `dbapp`.`Customers` (`customerID`)
