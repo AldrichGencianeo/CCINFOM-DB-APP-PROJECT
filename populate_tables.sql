@@ -1,9 +1,8 @@
-USE dbApp;
-
+USE dbapp;
 -- ===============================
 -- CUSTOMER TABLE
 -- ===============================
-INSERT INTO customers (customerID, firstName, lastName, email, phoneNumber, balance)
+INSERT INTO Customers (customerID, firstName, lastName, email, phoneNumber, balance)
 VALUES
 (1000, 'Aldrich', 'Gencianeo', 'aldrich_gencianeo@dlsu.edu.ph', '09171234567', 8500.00),
 (1001, 'Eoghan', 'Follero', 'eoghan_follero@dlsu.edu.ph', '09182345678', 9000.00),
@@ -19,7 +18,7 @@ VALUES
 -- ===============================
 -- EVENT TABLE
 -- ===============================
-INSERT INTO events (eventID, eventname, eventtype, bookingfee)
+INSERT INTO Events (eventID, eventname, eventtype, bookingfee)
 VALUES
 (2000, 'Harmony Nights', 'Concert', 9000.00),
 (2001, 'Phantom of the Opera', 'Theater', 7000.00),
@@ -35,19 +34,19 @@ VALUES
 -- ===============================
 -- VENUE & SECTION TABLE
 -- ===============================
-INSERT INTO section (sectionID, sectionname, price, availableslots)
+INSERT INTO Section (sectionID, sectionname, capacity, price)
 VALUES
-(3000, 'VIP', 950.00, 100),
-(3001, 'Regular', 300.00,  400),
-(3002, 'VIP', 950.00, 150),
-(3003, 'Balcony', 150.00, 300),
-(3004, 'VIP', 950.00, 200),
-(3005, 'Upper Box', 300.00, 600);
+(3000, 'VIP', 100, 950.00),
+(3001, 'Regular', 400, 300.00),
+(3002, 'VIP', 150, 950.00),
+(3003, 'Balcony', 300, 150.00),
+(3004, 'VIP', 200, 950.00),
+(3005, 'Upper Box', 600, 300.00);
 
 -- ===============================
 -- MERCHANDISE TABLE
 -- ===============================
-INSERT INTO merchandise (merchandiseID, merchandisename, category, price, stock)
+INSERT INTO Merchandise (merchandiseID, merchandisename, category, price, stock)
 VALUES
 (4000, 'Official Event T-Shirt', 'Clothing', 750.00, 150),
 (4001, 'Event Poster', 'Collectible', 250.00, 200),
@@ -59,7 +58,7 @@ VALUES
 -- ===============================
 -- SCHEDULES TABLE
 -- ===============================
-INSERT INTO schedules (scheduleID, eventID, scheduleDate, startTime, endTime)
+INSERT INTO Schedules (scheduleID, eventID, scheduleDate, startTime, endTime)
 VALUES
 (5000, 2000, '2025-12-15', '19:00:00', '22:00:00'),
 (5001, 2000, '2025-12-16', '19:00:00', '22:00:00'),
@@ -70,7 +69,7 @@ VALUES
 -- ===============================
 -- SCHEDULE_SECTION TABLE
 -- ===============================
-INSERT INTO schedule_section (scheduleID, sectionID, availableSlots)
+INSERT INTO Schedule_Section (scheduleID, sectionID, availableSlots)
 VALUES
 (5000, 3000, 100),
 (5000, 3001, 400),
@@ -84,7 +83,7 @@ VALUES
 -- ===============================
 -- EVENT_MERCH TABLE
 -- ===============================
-INSERT INTO event_merch (eventID, merchandiseID, merchtype)
+INSERT INTO Event_Merch (eventID, merchandiseID, merchtype)
 VALUES
 -- Harmony Nights (Concert) - Event 2000
 (2000, 4000, 'Package'),   -- T-Shirt as Package
@@ -132,9 +131,13 @@ VALUES
 (2009, 4003, 'Package'),   -- Signed Album as Package
 (2009, 4004, 'Addon');     -- Light Stick as Addon
 
-SELECT * FROM events;
-SELECT * FROM customers;
-SELECT * FROM section;
-SELECT * FROM merchandise;
-SELECT * FROM event_merch;
-SELECT * FROM schedules ORDER BY scheduleDate;
+-- ===============================
+-- VERIFICATION QUERY
+-- ===============================
+SELECT 'Customers' as TableName, COUNT(*) as RowCount FROM Customers
+UNION ALL SELECT 'Events', COUNT(*) FROM Events
+UNION ALL SELECT 'Section', COUNT(*) FROM Section
+UNION ALL SELECT 'Merchandise', COUNT(*) FROM Merchandise
+UNION ALL SELECT 'Schedules', COUNT(*) FROM Schedules
+UNION ALL SELECT 'Schedule_Section', COUNT(*) FROM Schedule_Section
+UNION ALL SELECT 'Event_Merch', COUNT(*) FROM Event_Merch;
