@@ -52,7 +52,6 @@ CREATE TABLE IF NOT EXISTS `dbapp`.`Section` (
   `sectionID` INT NOT NULL AUTO_INCREMENT,
   `sectionname` VARCHAR(10) NOT NULL,
   `capacity` INT NOT NULL,
-  `price` DECIMAL(7,2) NOT NULL,
   PRIMARY KEY (`sectionID`))
 ENGINE = InnoDB;
 
@@ -106,9 +105,9 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `dbapp`.`Customers`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `dbapp`.`customers` ;
+DROP TABLE IF EXISTS `dbapp`.`Customers` ;
 
-CREATE TABLE IF NOT EXISTS `dbapp`.`customers` (
+CREATE TABLE IF NOT EXISTS `dbapp`.`Customers` (
   `customerID` INT NOT NULL AUTO_INCREMENT,
   `firstName` VARCHAR(50) NULL,
   `lastName` VARCHAR(50) NULL,
@@ -127,12 +126,13 @@ DROP TABLE IF EXISTS `dbapp`.`Schedule_Section` ;
 CREATE TABLE IF NOT EXISTS `dbapp`.`Schedule_Section` (
   `scheduleID` INT NOT NULL,
   `sectionID` INT NOT NULL,
-  `availableSlots` INT NULL,
-  PRIMARY KEY (`scheduleID`, `sectionID`), 
+  `availableSlots` INT NOT NULL,
+  `price` DECIMAL(7,2) NOT NULL,
   INDEX `fk_Schedule_Section_Section1_idx` (`sectionID` ASC) VISIBLE,
   INDEX `fk_Schedule_Section_Schedules1_idx` (`scheduleID` ASC) VISIBLE,
-  -- UNIQUE INDEX `scheduleID_UNIQUE` (`scheduleID` ASC) VISIBLE,
-  -- UNIQUE INDEX `sectionID_UNIQUE` (`sectionID` ASC) VISIBLE,
+  PRIMARY KEY (`scheduleID`, `sectionID`),
+  UNIQUE INDEX `scheduleID_UNIQUE` (`scheduleID` ASC) VISIBLE,
+  UNIQUE INDEX `sectionID_UNIQUE` (`sectionID` ASC) VISIBLE,
   CONSTRAINT `fk_Schedule_Section_Section1`
     FOREIGN KEY (`sectionID`)
     REFERENCES `dbapp`.`Section` (`sectionID`)
@@ -181,23 +181,19 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `dbapp`.`Merch_Receipt` ;
 
 CREATE TABLE IF NOT EXISTS `dbapp`.`Merch_Receipt` (
-  `ticketID` INT,
+  `ticketID` INT NULL,
   `customerID` INT NOT NULL,
   `eventID` INT NOT NULL,
   `merchandiseID` INT NOT NULL,
   `quantity` INT NOT NULL,
   `totalprice` DECIMAL(7,2) NOT NULL,
   `receiptID` INT NOT NULL AUTO_INCREMENT,
-  INDEX `fk_Merch_Receipt_Tickets1_idx` (`ticketID` ASC) VISIBLE,
+  `purchaseDate` DATE NOT NULL,
   INDEX `fk_Merch_Receipt_Customers1_idx` (`customerID` ASC) VISIBLE,
   INDEX `fk_Merch_Receipt_Event_Merch1_idx` (`eventID` ASC, `merchandiseID` ASC) VISIBLE,
   PRIMARY KEY (`receiptID`),
   UNIQUE INDEX `receiptID_UNIQUE` (`receiptID` ASC) VISIBLE,
-  CONSTRAINT `fk_Merch_Receipt_Tickets1`
-	FOREIGN KEY (`ticketID`)
-    REFERENCES `dbapp`.`Tickets` (`ticketID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+  INDEX `fk_Merch_Receipt_Tickets1_idx` (`ticketID` ASC) VISIBLE,
   CONSTRAINT `fk_Merch_Receipt_Customers1`
     FOREIGN KEY (`customerID`)
     REFERENCES `dbapp`.`Customers` (`customerID`)
@@ -206,6 +202,11 @@ CREATE TABLE IF NOT EXISTS `dbapp`.`Merch_Receipt` (
   CONSTRAINT `fk_Merch_Receipt_Event_Merch1`
     FOREIGN KEY (`eventID` , `merchandiseID`)
     REFERENCES `dbapp`.`Event_Merch` (`eventID` , `merchandiseID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Merch_Receipt_Tickets1`
+    FOREIGN KEY (`ticketID`)
+    REFERENCES `dbapp`.`Tickets` (`ticketID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
