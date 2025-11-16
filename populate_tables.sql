@@ -35,14 +35,12 @@ VALUES
 -- ===============================
 -- VENUE & SECTION TABLE
 -- ===============================
-INSERT INTO section (sectionID, sectionname, capacity, price)
+INSERT INTO section (sectionID, sectionname, capacity)
 VALUES
-(3000, 'VIP', 100, 950.00),
-(3001, 'Regular', 400, 300.00),
-(3002, 'VIP', 150, 950.00),
-(3003, 'Balcony', 300, 150.00),
-(3004, 'VIP', 200, 950.00),
-(3005, 'Upper Box', 600, 300.00);
+(3000, 'VIP', 100),
+(3001, 'Regular', 400),
+(3002, 'Balcony', 300),
+(3003, 'Upper Box', 600);
 
 -- ===============================
 -- MERCHANDISE TABLE
@@ -142,3 +140,11 @@ UNION ALL SELECT 'merchandise', COUNT(*) FROM merchandise
 UNION ALL SELECT 'schedules', COUNT(*) FROM schedules
 UNION ALL SELECT 'schedule_section', COUNT(*) FROM schedule_section
 UNION ALL SELECT 'event_merch', COUNT(*) FROM event_merch;
+
+SELECT * FROM customers;
+SELECT * FROM events;
+SELECT * FROM section;
+SELECT * FROM merchandise;
+SELECT * FROM event_merch;
+
+DESCRIBE events;
