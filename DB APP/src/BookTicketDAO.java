@@ -102,15 +102,16 @@ public class BookTicketDAO {
         String selectBalanceSQL = "SELECT balance FROM customers WHERE customerID = ? FOR UPDATE";
         String updateBalanceSQL = "UPDATE customers SET balance = balance - ? WHERE customerID = ?";
         String updateTicketSQL = "UPDATE tickets SET status = 'CO' WHERE ticketID = ? AND status = 'P'";
+        String selectSectionTypeSQL = "SELECT category FROM sections WHERE sectionID = ?";
         String selectEventMerchSQL = "SELECT merchandiseID FROM event_merch WHERE eventID = ? AND merchtype = 'Package'";
-        String insertMerchReceiptSQL = "INSERT INTO merch_receipt (ticketID, customerID, eventID, merchandiseID, quantity, totalPrice) VALUES (?, ?, ?, ?, ?, ?)";
+        String insertMerchReceiptSQL = "INSERT INTO merch_receipt (ticketID, customerID, eventID, merchandiseID, quantity, totalPrice, purchaseDate) VALUES (?, ?, ?, ?, ?, ?, NOW())";
 
         boolean oldAutoCommit = connection.getAutoCommit();
 
         try {
             connection.setAutoCommit(false);
 
-            int customerID, scheduleID, eventID;
+            int customerID, scheduleID, eventID, sectionID;
             double ticketPrice;
             String status;
 
@@ -129,6 +130,20 @@ public class BookTicketDAO {
                     ticketPrice = resultSet.getDouble("ticketPrice");
                     status = resultSet.getString("status");
                     eventID = resultSet.getInt("eventID");
+                }
+            }
+
+            String sectionType;
+
+            try (PreparedStatement ps = connection.prepareStatement(selectSectionTypeSQL)) {
+                ps.setInt(1, sectionID);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        connection.rollback();
+                        return false;
+                    }
+                    sectionType = rs.getString("category");
                 }
             }
 
@@ -246,6 +261,12 @@ public class BookTicketDAO {
                     ticketPrice = resultSet.getDouble("ticketPrice");
                     status = resultSet.getString("status");
                 }
+            }
+
+            if (!status.equals("P") && !status.equals("CO")) {
+                connection.rollback();
+
+                return false;
             }
 
             try (PreparedStatement psUpdateTicket = connection.prepareStatement(updateTicketSQL)) {

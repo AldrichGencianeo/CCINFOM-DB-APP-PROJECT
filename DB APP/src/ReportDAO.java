@@ -1,12 +1,18 @@
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ReportDAO {
     private Connection connection;
+    private final MerchReceiptRepo merchReceiptRepo;
+    private final MerchandiseRepo merchandiseRepo;
 
-    public ReportDAO(Connection connection) {
+    public ReportDAO(Connection connection, MerchReceiptRepo merchReceiptRepo, MerchandiseRepo merchandiseRepo) {
         this.connection = connection;
+        this.merchReceiptRepo = merchReceiptRepo;
+        this.merchandiseRepo = merchandiseRepo;
     }
 
     public EventScheduleReport generateMonthlyReport(int month, int year) throws SQLException {
@@ -151,5 +157,51 @@ public class ReportDAO {
             }
         }
         return years;
+    }
+
+    public List<MerchSalesReport> generateReportPerEvent(int eventID) {
+        List<MerchReceipt> receipts = merchReceiptRepo.findByEventID(eventID);
+        Map<Integer, Integer> soldCount = new HashMap<>();
+        Map<Integer, Double> revenueMap = new HashMap<>();
+
+        for (MerchReceipt r : receipts) {
+            int merchandiseID = r.getMerchandiseID();
+
+            soldCount.put(merchandiseID, soldCount.getOrDefault(merchandiseID, 0) + r.getQuantity());
+            revenueMap.put(merchandiseID, revenueMap.getOrDefault(merchandiseID, 0.0) + (r.getQuantity() * r.getTotalPrice()));
+        }
+
+        List<MerchSalesReport> report = new ArrayList<>();
+
+        for (int merchandiseID : soldCount.keySet()) {
+            Merchandise m = merchandiseRepo.findByID(merchandiseID);
+
+            report.add(new MerchSalesReport(merchandiseID, m.getMerchandiseName(), soldCount.get(merchandiseID), revenueMap.get(merchandiseID), m.getStock()));
+        }
+
+        return report;
+    }
+
+    public List<MerchSalesReport> generateReportPerMonth(int year, int month) {
+        List<MerchReceipt> receipts = merchReceiptRepo.findByMonth(year, month);
+        Map<Integer, Integer> soldCount = new HashMap<>();
+        Map<Integer, Double> revenueMap = new HashMap<>();
+
+        for (MerchReceipt r : receipts) {
+            int merchandiseID = r.getMerchandiseID();
+
+            soldCount.put(merchandiseID, soldCount.getOrDefault(merchandiseID, 0) + r.getQuantity());
+            revenueMap.put(merchandiseID, revenueMap.getOrDefault(merchandiseID, 0.0) + (r.getQuantity() * r.getTotalPrice()));
+        }
+
+        List<MerchSalesReport> report = new ArrayList<>();
+
+        for (int merchandiseID : soldCount.keySet()) {
+            Merchandise m = merchandiseRepo.findByID(merchandiseID);
+
+            report.add(new MerchSalesReport(merchandiseID, m.getMerchandiseName(), soldCount.get(merchandiseID), revenueMap.get(merchandiseID), m.getStock()));
+        }
+
+        return report;
     }
 }
