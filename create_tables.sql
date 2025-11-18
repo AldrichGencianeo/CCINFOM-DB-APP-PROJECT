@@ -7,10 +7,6 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema dbapp
 -- -----------------------------------------------------
-
--- -----------------------------------------------------
--- Schema dbapp
--- -----------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS `dbapp` DEFAULT CHARACTER SET utf8 ;
 USE `dbapp` ;
 
@@ -131,8 +127,8 @@ CREATE TABLE IF NOT EXISTS `dbapp`.`Schedule_Section` (
   INDEX `fk_Schedule_Section_Section1_idx` (`sectionID` ASC) VISIBLE,
   INDEX `fk_Schedule_Section_Schedules1_idx` (`scheduleID` ASC) VISIBLE,
   PRIMARY KEY (`scheduleID`, `sectionID`),
-  UNIQUE INDEX `scheduleID_UNIQUE` (`scheduleID` ASC) VISIBLE,
-  UNIQUE INDEX `sectionID_UNIQUE` (`sectionID` ASC) VISIBLE,
+  -- UNIQUE INDEX `scheduleID_UNIQUE` (`scheduleID` ASC) VISIBLE,
+  -- UNIQUE INDEX `sectionID_UNIQUE` (`sectionID` ASC) VISIBLE,
   CONSTRAINT `fk_Schedule_Section_Section1`
     FOREIGN KEY (`sectionID`)
     REFERENCES `dbapp`.`Section` (`sectionID`)
@@ -141,7 +137,7 @@ CREATE TABLE IF NOT EXISTS `dbapp`.`Schedule_Section` (
   CONSTRAINT `fk_Schedule_Section_Schedules1`
     FOREIGN KEY (`scheduleID`)
     REFERENCES `dbapp`.`Schedules` (`scheduleID`)
-    ON DELETE NO ACTION
+    ON DELETE NO ACTION -- try cascade if not work
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
