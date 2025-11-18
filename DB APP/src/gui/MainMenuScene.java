@@ -60,10 +60,10 @@ public class MainMenuScene {
 //        });
 
         // Book Ticket
-//        btnBookTicket.setOnAction(e -> {
-//            BookTicketScene scene = new BookTicketScene(connection, this);
-//            root.getChildren().setAll(scene.getRoot());
-//        });
+        btnBookTicket.setOnAction(e -> {
+            BookTicketScene scene = new BookTicketScene(connection, this);
+            root.setCenter(scene.getRoot());
+        });
 
         // Manage Schedules
 //        btnSchedules.setOnAction(e -> {

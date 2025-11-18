@@ -8,6 +8,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import model.Category;
 import model.Event;
@@ -27,10 +28,54 @@ public class MerchandiseScene {
         this.connection = connection;
         root = new BorderPane();
 
+        // Back button
         HBox backButton = SceneUtils.createBackButton(mainMenu, connection);
         root.setTop(backButton);
 
+        // Create table but DO NOT SHOW it initially
         merchandiseTable = new TableView<>();
+        setupTable();
+
+        // Centered buttons (like MainMenuScene)
+        VBox menuBox = new VBox(15);
+        menuBox.setPadding(new Insets(20));
+        menuBox.setAlignment(Pos.CENTER);
+
+        Button btnAdd = new Button("Add Merchandise");
+        Button btnUpdate = new Button("Update Selected");
+        Button btnDelete = new Button("Delete Selected");
+        Button btnView = new Button("View Selected");
+        Button btnViewAll = new Button("View All Merchandise");
+        Button btnViewEvents = new Button("View Related Events");
+
+        btnAdd.setPrefWidth(200);
+        btnUpdate.setPrefWidth(200);
+        btnDelete.setPrefWidth(200);
+        btnView.setPrefWidth(200);
+        btnViewAll.setPrefWidth(200);
+        btnViewEvents.setPrefWidth(200);
+
+        menuBox.getChildren().addAll(
+                btnAdd, btnUpdate, btnDelete, btnView, btnViewAll, btnViewEvents
+        );
+
+        // Set centered layout as default
+        root.setCenter(menuBox);
+
+        // Actions
+        btnAdd.setOnAction(e -> addMerch());
+        btnUpdate.setOnAction(e -> updateMerch());
+        btnDelete.setOnAction(e -> deleteMerch());
+        btnView.setOnAction(e -> viewMerch());
+        btnViewAll.setOnAction(e -> viewAllMerch());
+        btnViewEvents.setOnAction(e -> viewRelatedEvents());
+    }
+
+    public BorderPane getRoot() {
+        return root;
+    }
+
+    private void setupTable() {
         TableColumn<Merchandise, Integer> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("MerchandiseID"));
 
@@ -47,33 +92,56 @@ public class MerchandiseScene {
         stockCol.setCellValueFactory(new PropertyValueFactory<>("stock"));
 
         merchandiseTable.getColumns().addAll(idCol, nameCol, categoryCol, priceCol, stockCol);
-        loadMerchandise();
-
-        VBox buttons = new VBox(10);
-        buttons.setPadding(new Insets(10));
-
-        Button btnAdd = new Button("Add Merchandise");
-        Button btnUpdate = new Button("Update Selected");
-        Button btnDelete = new Button("Delete Selected");
-        Button btnView = new Button("View Selected");
-        Button btnViewAll = new Button("View All Merchandise");
-        Button btnViewEvents = new Button("View Related Events");
-
-        buttons.getChildren().addAll(btnAdd, btnUpdate, btnDelete, btnView, btnViewAll, btnViewEvents);
-
-        root.setCenter(merchandiseTable);
-        root.setRight(buttons);
-
-        btnAdd.setOnAction(e -> addMerch());
-        btnUpdate.setOnAction(e -> updateMerch());
-        btnDelete.setOnAction(e -> deleteMerch());
-        btnView.setOnAction(e -> viewMerch());
-        btnViewAll.setOnAction(e -> viewAllMerch());
-        btnViewEvents.setOnAction(e -> viewRelatedEvents());
     }
 
-    public BorderPane getRoot() {
-        return root;
+    private Merchandise openSelectionDialog(String title) {
+        Stage stage = new Stage();
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(10));
+
+        TableView<Merchandise> table = new TableView<>();
+
+        TableColumn<Merchandise, Integer> idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(new PropertyValueFactory<>("MerchandiseID"));
+
+        TableColumn<Merchandise, String> nameCol = new TableColumn<>("Name");
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("merchandiseName"));
+
+        table.getColumns().addAll(idCol, nameCol);
+
+        try {
+            MerchandiseDAO dao = new MerchandiseDAO(connection);
+            table.getItems().setAll(dao.viewAllMerchandise());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        Button selectBtn = new Button("Select");
+        Button cancelBtn = new Button("Cancel");
+
+        final Merchandise[] selected = {null};
+
+        selectBtn.setOnAction(e -> {
+            selected[0] = table.getSelectionModel().getSelectedItem();
+            stage.close();
+        });
+
+        cancelBtn.setOnAction(e -> {
+            selected[0] = null;
+            stage.close();
+        });
+
+        layout.getChildren().addAll(
+                new Label(title),
+                table,
+                new HBox(10, selectBtn, cancelBtn)
+        );
+
+        stage.setScene(new Scene(layout, 400, 300));
+        stage.setTitle(title);
+        stage.showAndWait();
+
+        return selected[0];
     }
 
     private void loadMerchandise() {
@@ -112,13 +180,9 @@ public class MerchandiseScene {
 
                 MerchandiseDAO dao = new MerchandiseDAO(connection);
                 dao.addMerchandise(m);
-                loadMerchandise();
                 stage.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            } catch (NumberFormatException nfe) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Price and Stock must be numbers.");
-                alert.showAndWait();
+            } catch (SQLException | NumberFormatException ex) {
+                new Alert(Alert.AlertType.ERROR, "Invalid input.").showAndWait();
             }
         });
 
@@ -133,7 +197,7 @@ public class MerchandiseScene {
     }
 
     private void updateMerch() {
-        Merchandise selected = merchandiseTable.getSelectionModel().getSelectedItem();
+        Merchandise selected = openSelectionDialog("Select Merchandise to Update");
         if (selected == null) return;
 
         Stage stage = new Stage();
@@ -158,12 +222,9 @@ public class MerchandiseScene {
 
                 MerchandiseDAO dao = new MerchandiseDAO(connection);
                 dao.updateMerchandise(selected);
-                loadMerchandise();
                 stage.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            } catch (NumberFormatException nfe) {
-                new Alert(Alert.AlertType.ERROR, "Price and Stock must be numbers.").showAndWait();
+            } catch (SQLException | NumberFormatException ex) {
+                new Alert(Alert.AlertType.ERROR, "Invalid input.").showAndWait();
             }
         });
 
@@ -178,34 +239,28 @@ public class MerchandiseScene {
     }
 
     private void deleteMerch() {
-        Merchandise selected = merchandiseTable.getSelectionModel().getSelectedItem();
+        Merchandise selected = openSelectionDialog("Select Merchandise to Delete");
         if (selected == null) return;
 
         try {
             MerchandiseDAO dao = new MerchandiseDAO(connection);
             dao.deleteMerchandise(selected.getMerchandiseID());
-            loadMerchandise();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+            new Alert(Alert.AlertType.INFORMATION, "Record deleted.").showAndWait();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     private void viewMerch() {
-        Merchandise selected = merchandiseTable.getSelectionModel().getSelectedItem();
-
-        if (selected == null) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "Please select a merchandise item to view.");
-            alert.showAndWait();
-            return;
-        }
+        Merchandise selected = openSelectionDialog("Select Merchandise to View");
+        if (selected == null) return;
 
         try {
             MerchandiseDAO dao = new MerchandiseDAO(connection);
             Merchandise m = dao.viewMerchandise(selected.getMerchandiseID());
 
             if (m == null) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Merchandise not found in database.");
-                alert.showAndWait();
+                new Alert(Alert.AlertType.ERROR, "Record not found.").showAndWait();
                 return;
             }
 
@@ -213,17 +268,15 @@ public class MerchandiseScene {
             VBox layout = new VBox(10);
             layout.setPadding(new Insets(15));
 
-            Label title = new Label("Merchandise Details");
-            Label id = new Label("ID: " + m.getMerchandiseID());
-            Label name = new Label("Name: " + m.getMerchandiseName());
-            Label category = new Label("Category: " + m.getCategory());
-            Label price = new Label("Price: " + m.getPrice());
-            Label stock = new Label("Stock: " + m.getStock());
-
-            Button closeBtn = new Button("Close");
-            closeBtn.setOnAction(ev -> stage.close());
-
-            layout.getChildren().addAll(title, id, name, category, price, stock, closeBtn);
+            layout.getChildren().addAll(
+                    new Label("Merchandise Details"),
+                    new Label("ID: " + m.getMerchandiseID()),
+                    new Label("Name: " + m.getMerchandiseName()),
+                    new Label("Category: " + m.getCategory()),
+                    new Label("Price: " + m.getPrice()),
+                    new Label("Stock: " + m.getStock()),
+                    new Button("Close")
+            );
 
             stage.setScene(new Scene(layout, 300, 250));
             stage.setTitle("View Merchandise");
@@ -231,8 +284,6 @@ public class MerchandiseScene {
 
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Error loading merchandise details.");
-            alert.showAndWait();
         }
     }
 
@@ -268,14 +319,12 @@ public class MerchandiseScene {
             table.getItems().setAll(list);
         } catch (SQLException ex) {
             ex.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Failed to load merchandise.");
-            alert.showAndWait();
         }
 
-        Button closeBtn = new Button("Close");
-        closeBtn.setOnAction(e -> stage.close());
+        Button close = new Button("Close");
+        close.setOnAction(e -> stage.close());
 
-        layout.getChildren().addAll(title, table, closeBtn);
+        layout.getChildren().addAll(title, table, close);
 
         stage.setScene(new Scene(layout, 600, 400));
         stage.setTitle("All Merchandise");
@@ -283,7 +332,7 @@ public class MerchandiseScene {
     }
 
     private void viewRelatedEvents() {
-        Merchandise selected = merchandiseTable.getSelectionModel().getSelectedItem();
+        Merchandise selected = openSelectionDialog("Select Merchandise to View Related Events");
         if (selected == null) return;
 
         Stage stage = new Stage();
@@ -300,13 +349,12 @@ public class MerchandiseScene {
                 layout.getChildren().add(new Label("No related events."));
             } else {
                 for (Event e : events) {
-                    layout.getChildren().add(
-                            new Label(String.format(
-                                    "ID: %d | Name: %s | Type: %s | Booking Fee: %.2f",
-                                    e.getEventID(), e.getEventName(),
-                                    e.getEventType(), e.getBookingFee()
-                            ))
-                    );
+                    layout.getChildren().add(new Label(
+                            "ID: " + e.getEventID() +
+                                    " | Name: " + e.getEventName() +
+                                    " | Type: " + e.getEventType() +
+                                    " | Booking Fee: " + e.getBookingFee()
+                    ));
                 }
             }
         } catch (SQLException ex) {

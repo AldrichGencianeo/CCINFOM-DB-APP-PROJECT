@@ -11,7 +11,13 @@ public class BookTicketDAO {
     }
 
     public int bookTicket(int customerID, int scheduleID, int sectionID) throws SQLException {
-        String selectSchedSectionSQL = "SELECT availableSlots, price FROM schedule_section WHERE scheduleID = ? AND sectionID = ? FOR UPDATE";
+        String selectSchedSectionSQL = """
+            SELECT ss.availableSlots, ss.price AS sectionPrice, e.bookingfee
+            FROM schedule_section ss
+            JOIN schedules s ON ss.scheduleID = s.scheduleID
+            JOIN events e ON s.eventID = e.eventID
+            WHERE ss.scheduleID = ? AND ss.sectionID = ? FOR UPDATE
+            """;
         String updateAvailSlotsSQL = "UPDATE schedule_section SET availableSlots = availableSlots - 1 WHERE scheduleID = ? AND sectionID = ?";
         String insertTicketSQL = "INSERT INTO tickets (customerID, scheduleID, sectionID, purchaseDate, ticketPrice, status) VALUES (?, ?, ?, ?, ?, 'P')";
 
@@ -35,7 +41,10 @@ public class BookTicketDAO {
                     }
 
                     availableSlots = resultSet.getInt("availableSlots");
-                    ticketPrice = resultSet.getDouble("price");
+                    double schedSectionPrice = resultSet.getDouble("sectionPrice");
+                    double bookingFee = resultSet.getDouble("bookingfee");
+
+                    ticketPrice = schedSectionPrice + bookingFee;
                 }
             }
 
@@ -88,9 +97,9 @@ public class BookTicketDAO {
     public boolean confirmTicket(int ticketID) throws SQLException {
         String selectTicketSQL = "SELECT t.customerID, t.scheduleID, t.ticketPrice, t.status, t.sectionID, s.eventID " +
                                  "FROM tickets t " +
-                                 "JOIN schedules s ON t.scheduleID = s.scheduleID" +
+                                 "JOIN schedules s ON t.scheduleID = s.scheduleID " +
                                  "WHERE t.ticketID = ?";
-        String selectSectionSQL = "SELECT sectionname FROM sections WHERE sectionID = ?";
+        String selectSectionSQL = "SELECT sectionname FROM section WHERE sectionID = ?";
         String selectBalanceSQL = "SELECT balance FROM customers WHERE customerID = ? FOR UPDATE";
         String updateBalanceSQL = "UPDATE customers SET balance = balance - ? WHERE customerID = ?";
         String updateTicketSQL = "UPDATE tickets SET status = 'CO' WHERE ticketID = ? AND status = 'P'";
