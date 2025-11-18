@@ -30,7 +30,6 @@ public class BookTicketDAO {
                 try (ResultSet resultSet = psSelect.executeQuery()) {
                     if (!resultSet.next()) {
                         connection.rollback();
-
                         return 1;
                     }
 
@@ -41,7 +40,6 @@ public class BookTicketDAO {
 
             if (availableSlots <= 0) {
                 connection.rollback();
-
                 return -1;
             }
 
@@ -52,7 +50,6 @@ public class BookTicketDAO {
 
                 if (updated != 1) {
                     connection.rollback();
-
                     return -1;
                 }
             }
@@ -75,8 +72,8 @@ public class BookTicketDAO {
             }
 
             connection.commit();
-
             return generatedTicketID;
+
         } catch (SQLException exception) {
             connection.rollback();
             throw exception;
@@ -86,10 +83,10 @@ public class BookTicketDAO {
     }
 
     public boolean confirmTicket(int ticketID) throws SQLException {
-        String selectTicketSQL = "SELECT t.customerID, t.scheduleID, t.ticketPrice, t.status, t.sectionID, s.eventID " +
-                                 "FROM tickets t " +
-                                 "JOIN schedules s ON t.scheduleID = s.scheduleID" +
-                                 "WHERE t.ticketID = ?";
+        String selectTicketSQL = "SELECT t.customerID, t.scheduleID, t.sectionID, t.ticketPrice, t.status, s.eventID " +
+                "FROM tickets t " +
+                "JOIN schedules s ON t.scheduleID = s.scheduleID " +
+                "WHERE t.ticketID = ?";
         String selectSectionSQL = "SELECT sectionname FROM sections WHERE sectionID = ?";
         String selectBalanceSQL = "SELECT balance FROM customers WHERE customerID = ? FOR UPDATE";
         String updateBalanceSQL = "UPDATE customers SET balance = balance - ? WHERE customerID = ?";
@@ -106,33 +103,33 @@ public class BookTicketDAO {
             double ticketPrice;
             String status;
 
+
             try (PreparedStatement preparedStatement = connection.prepareStatement(selectTicketSQL)) {
                 preparedStatement.setInt(1, ticketID);
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (!resultSet.next()) {
                         connection.rollback();
-
                         return false;
                     }
 
                     customerID = resultSet.getInt("customerID");
                     scheduleID = resultSet.getInt("scheduleID");
+                    sectionID = resultSet.getInt("sectionID");
                     ticketPrice = resultSet.getDouble("ticketPrice");
                     status = resultSet.getString("status");
-                    sectionID = resultSet.getInt("sectionID");
                     eventID = resultSet.getInt("eventID");
                 }
             }
 
+
             if (!"P".equals(status)) {
                 connection.rollback();
-
                 return false;
             }
 
-            String sectionName;
 
+            String sectionName;
             try (PreparedStatement ps = connection.prepareStatement(selectSectionSQL)) {
                 ps.setInt(1, sectionID);
 
@@ -146,14 +143,12 @@ public class BookTicketDAO {
             }
 
             double balance;
-
             try (PreparedStatement psBalance = connection.prepareStatement(selectBalanceSQL)) {
                 psBalance.setInt(1, customerID);
 
                 try (ResultSet resultSet = psBalance.executeQuery()) {
                     if (!resultSet.next()) {
                         connection.rollback();
-
                         return false;
                     }
 
@@ -163,7 +158,6 @@ public class BookTicketDAO {
 
             if (balance < ticketPrice) {
                 connection.rollback();
-
                 return false;
             }
 
@@ -174,7 +168,6 @@ public class BookTicketDAO {
 
                 if (updated != 1) {
                     connection.rollback();
-
                     return false;
                 }
             }
@@ -184,7 +177,6 @@ public class BookTicketDAO {
 
                 if (preparedStatement.executeUpdate() != 1) {
                     connection.rollback();
-
                     return false;
                 }
             }
@@ -202,8 +194,8 @@ public class BookTicketDAO {
                             psInsert.setInt(2, customerID);
                             psInsert.setInt(3, eventID);
                             psInsert.setInt(4, merchID);
-                            psInsert.setInt(5, 1);
-                            psInsert.setDouble(6, 0.0);
+                            psInsert.setInt(5, 1); // quantity = 1
+                            psInsert.setDouble(6, 0.0); // totalPrice = 0 (free package)
                             psInsert.addBatch();
                         }
                     }
@@ -213,8 +205,8 @@ public class BookTicketDAO {
             }
 
             connection.commit();
-
             return true;
+
         } catch (SQLException exception) {
             connection.rollback();
             throw exception;
@@ -245,7 +237,6 @@ public class BookTicketDAO {
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (!resultSet.next()) {
                         connection.rollback();
-
                         return false;
                     }
 
@@ -259,7 +250,6 @@ public class BookTicketDAO {
 
             if (!status.equals("P") && !status.equals("CO")) {
                 connection.rollback();
-
                 return false;
             }
 
@@ -269,7 +259,6 @@ public class BookTicketDAO {
 
                 if (updated != 1) {
                     connection.rollback();
-
                     return false;
                 }
             }
@@ -281,7 +270,6 @@ public class BookTicketDAO {
 
                 if (updated != 1) {
                     connection.rollback();
-
                     return false;
                 }
             }
@@ -294,7 +282,6 @@ public class BookTicketDAO {
 
                     if (updated != 1) {
                         connection.rollback();
-
                         return false;
                     }
                 }
@@ -306,8 +293,8 @@ public class BookTicketDAO {
             }
 
             connection.commit();
-
             return true;
+
         } catch (SQLException exception) {
             connection.rollback();
             throw exception;
