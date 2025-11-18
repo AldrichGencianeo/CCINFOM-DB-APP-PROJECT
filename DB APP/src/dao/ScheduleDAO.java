@@ -16,7 +16,7 @@ public class ScheduleDAO {
 
     public void addScheduleWithPrices(Schedule schedule, List<ScheduleSection> prices) throws SQLException {
         String scheduleSql = "INSERT INTO schedules (eventID, scheduleDate, startTime, endTime) VALUES (?, ?, ?, ?)";
-        String sectionSql = "INSERT INTO schedule_section (scheduleID, sectionID, price) VALUES (?, ?, ?)";
+        String sectionSql = "INSERT INTO schedule_section (scheduleID, sectionID, availableSlots, price) VALUES (?, ?, ?, ?)";
 
         PreparedStatement scheduleStmt = null;
         PreparedStatement sectionStmt = null;
@@ -43,7 +43,8 @@ public class ScheduleDAO {
             for (ScheduleSection ss : prices) {
                 sectionStmt.setInt(1, newScheduleID);
                 sectionStmt.setInt(2, ss.getSectionID());
-                sectionStmt.setDouble(3, ss.getPrice());
+                sectionStmt.setInt(3, ss.getAvailableSlots());
+                sectionStmt.setDouble(4, ss.getPrice());
                 sectionStmt.addBatch();
             }
             sectionStmt.executeBatch();

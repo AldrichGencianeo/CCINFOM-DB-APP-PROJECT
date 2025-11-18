@@ -32,7 +32,7 @@ public class SectionDAO {
 
     public void updateSection(Section section) throws SQLException {
         String sql = "UPDATE section SET sectionname=?, capacity=? WHERE sectionID=?";
-        
+
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, section.getSectionName());
             statement.setInt(2, section.getCapacity());
@@ -89,7 +89,7 @@ public class SectionDAO {
         Section section = viewSection(sectionID);
 
         if (section == null) {
-            System.out.println("model.Section not found with ID: " + sectionID);
+            System.out.println("Section not found with ID: " + sectionID);
             return;
         }
 
@@ -98,22 +98,32 @@ public class SectionDAO {
         System.out.println();
 
         String sql = """
-                     SELECT 
-                       e.eventname,
-                       sch.scheduleID,
-                       ss.price,
-                       (SELECT COUNT(t.ticketID)
-                        FROM Tickets t
-                        WHERE t.scheduleID = sch.scheduleID 
-                          AND t.sectionID = s.sectionID 
-                          AND t.status != 'CA') AS tickets_sold
-                     FROM model.Section s
-                     JOIN Schedule_Section ss ON s.sectionID = ss.sectionID
-                     JOIN Schedules sch ON ss.scheduleID = ss.scheduleID
-                     JOIN Events e ON sch.eventID = e.eventID
-                     WHERE s.sectionID = ?
-                     ORDER BY sch.scheduleDate, e.eventname;
-                     """;
+            SELECT 
+                e.eventname,
+                sch.scheduleID,
+                sch.scheduleDate,
+                ss.price,
+                ss.availableSlots - COUNT(t.ticketID) AS availableSlots,
+                COUNT(t.ticketID) AS tickets_sold
+            FROM section s
+            JOIN schedule_section ss ON s.sectionID = ss.sectionID
+            JOIN schedules sch ON ss.scheduleID = sch.scheduleID
+            JOIN events e ON sch.eventID = e.eventID
+            LEFT JOIN tickets t 
+                ON t.scheduleID = sch.scheduleID
+                AND t.sectionID = s.sectionID
+                AND t.status != 'CA'
+            WHERE s.sectionID = ?
+            GROUP BY 
+                e.eventname, 
+                sch.scheduleID, 
+                sch.scheduleDate,
+                ss.price, 
+                ss.availableSlots
+            ORDER BY 
+                sch.scheduleDate, 
+                e.eventname;
+        """;
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, sectionID);
@@ -124,21 +134,18 @@ public class SectionDAO {
 
                 while (resultSet.next()) {
                     hasSchedules = true;
-                    
+
                     String eventName = resultSet.getString("eventname");
                     int scheduleID = resultSet.getInt("scheduleID");
+                    Date scheduleDate = resultSet.getDate("scheduleDate");
                     double price = resultSet.getDouble("price");
                     int ticketsSold = resultSet.getInt("tickets_sold");
-                    
-                    int capacity = section.getCapacity(); 
-                    
-                    int availableSlots = capacity - ticketsSold; 
+                    int availableSlots = resultSet.getInt("availableSlots");
 
-                    System.out.printf("  model.Event: %s (ScheduleID: %d)%n", eventName, scheduleID);
-                    System.out.printf("    Price: %.2f%n", price);
-                    System.out.printf("    Capacity: %d%n", capacity);
-                    System.out.printf("    Sold: %d%n", ticketsSold);
-                    System.out.printf("    Available: %d%n%n", availableSlots);
+                    System.out.printf("  Event: %s (ScheduleID: %d, Date: %s)%n", eventName, scheduleID, scheduleDate);
+                    System.out.printf("  Price: %.2f%n", price);
+                    System.out.printf("  Sold: %d%n", ticketsSold);
+                    System.out.printf("  Available: %d%n%n", availableSlots);
                 }
 
                 if (!hasSchedules) {

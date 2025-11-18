@@ -5,6 +5,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.Button;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -17,30 +18,70 @@ public class MainMenuScene {
         this.connection = connection;
         root = new BorderPane();
 
-        VBox sidebar = new VBox(10);
-        sidebar.setPadding(new Insets(10));
+        VBox menuBox = new VBox(15);
+        menuBox.setPadding(new Insets(20));
+        menuBox.setAlignment(Pos.CENTER);
 
-        Button btnCustomers = new Button("Manage Customers");
         Button btnEvents = new Button("Manage Events");
-        Button btnSchedules = new Button("Manage Schedules");
         Button btnMerchandise = new Button("Manage Merchandise");
-
+        Button btnSections = new Button("Manage Sections");
         Button btnBookTicket = new Button("Book Ticket");
-        Button btnMerchTrans = new Button("Merchandise Transactions");
+        Button btnSchedules = new Button("Manage Schedules");
+        Button btnMerchTrans = new Button("Merchandise Transaction");
+        Button btnReports = new Button("Generate Reports");
 
-        Button btnEventReport = new Button("Event Schedule Report");
-        Button btnMerchReport = new Button("Merchandise Sales Report");
+        btnEvents.setMinWidth(200);
+        btnMerchandise.setMinWidth(200);
+        btnSections.setMinWidth(200);
+        btnBookTicket.setMinWidth(200);
+        btnSchedules.setMinWidth(200);
+        btnMerchTrans.setMinWidth(200);
+        btnReports.setMinWidth(200);
 
-        sidebar.getChildren().addAll(btnCustomers, btnEvents, btnSchedules, btnMerchandise, btnBookTicket, btnMerchTrans, btnEventReport, btnMerchReport);
-        root.setLeft(sidebar);
+        menuBox.getChildren().addAll(btnEvents, btnMerchandise, btnSections, btnBookTicket, btnSchedules, btnMerchTrans, btnReports);
+        root.setCenter(menuBox);
 
-        VBox mainContent = new VBox();
-        root.setCenter(mainContent);
+        // Manage Events
+//        btnEvents.setOnAction(e -> {
+//            EventScene scene = new EventScene(connection, this);
+//            root.getChildren().setAll(scene.getRoot());
+//        });
 
-//        btnCustomers.setOnAction(e -> mainContent.getChildren().setAll(new CustomerScene().getRoot()));
-//        btnEvents.setOnAction(e -> mainContent.getChildren().setAll(new EventScene().getRoot()));
-        MerchandiseScene merchScene = new MerchandiseScene(connection);
-        btnMerchandise.setOnAction(e -> mainContent.getChildren().setAll(merchScene.getRoot()));
+        // Manage Merchandise
+        btnMerchandise.setOnAction(e -> {
+            MerchandiseScene scene = new MerchandiseScene(connection, this);
+            root.getChildren().setAll(scene.getRoot());
+        });
+
+        // Manage Sections
+//        btnSections.setOnAction(e -> {
+//            SectionScene scene = new SectionScene(connection, this);
+//            root.getChildren().setAll(scene.getRoot());
+//        });
+
+        // Book Ticket
+//        btnBookTicket.setOnAction(e -> {
+//            BookTicketScene scene = new BookTicketScene(connection, this);
+//            root.getChildren().setAll(scene.getRoot());
+//        });
+
+        // Manage Schedules
+//        btnSchedules.setOnAction(e -> {
+//            ScheduleScene scene = new ScheduleScene(connection, this);
+//            root.getChildren().setAll(scene.getRoot());
+//        });
+
+        // Merchandise Transaction
+//        btnMerchTrans.setOnAction(e -> {
+//            MerchTransactionScene scene = new MerchTransactionScene(connection, this);
+//            root.getChildren().setAll(scene.getRoot());
+//        });
+
+        // Generate Reports
+//        btnReports.setOnAction(e -> {
+//            ReportsScene scene = new ReportsScene(connection, this);
+//            root.getChildren().setAll(scene.getRoot());
+//        });
     }
 
     public Parent getRoot() {
