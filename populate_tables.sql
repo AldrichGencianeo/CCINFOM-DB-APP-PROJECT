@@ -77,6 +77,7 @@ VALUES
 (5002, 3002, 150, 180.00),
 (5002, 3003, 300, 120.00),
 (5003, 3001, 200, 150.00),
+(5004, 3000, 0, 500.00),
 (5004, 3003, 600, 300.00);
 
 -- ===============================
@@ -166,5 +167,7 @@ SELECT * FROM merchandise;
 SELECT * FROM event_merch;
 SELECT * FROM schedules;
 SELECT * FROM tickets;
+SELECT * FROM schedule_section;
+SELECT * FROM merch_receipt;
 
 DESCRIBE events;
