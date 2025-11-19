@@ -131,6 +131,24 @@ VALUES
 (2009, 4004, 'Addon');     -- Light Stick as Addon
 
 -- ===============================
+-- MERCH_RECEIPTS TABLE
+-- ===============================
+INSERT INTO merch_receipt (ticketID, customerID, eventID, merchandiseID, quantity, totalprice, purchaseDate)
+VALUES
+-- Event 2000 (Harmony Nights)
+(NULL, 1000, 2000, 4000, 2, 1500.00, '2025-12-15'),  -- 2 T-Shirts
+(NULL, 1001, 2000, 4001, 1, 250.00, '2025-12-15'),   -- 1 Poster
+(NULL, 1002, 2000, 4003, 1, 1200.00, '2025-12-15'),  -- 1 Signed Album
+
+-- Event 2001 (Phantom of the Opera)
+(NULL, 1003, 2001, 4000, 1, 750.00, '2025-12-20'),    -- 1 T-Shirt
+(NULL, 1004, 2001, 4005, 2, 800.00, '2025-12-20'),   -- 2 Tote Bags
+
+-- Event 2002 (RockFest 2025)
+(NULL, 1005, 2002, 4000, 3, 2250.00, '2025-11-25'),  -- 3 T-Shirts
+(NULL, 1006, 2002, 4004, 1, 900.00, '2025-11-25');   -- 1 Light Stick
+
+-- ===============================
 -- VERIFICATION QUERY
 -- ===============================
 SELECT 'customers' as TableName, COUNT(*) as RowCount FROM customers
