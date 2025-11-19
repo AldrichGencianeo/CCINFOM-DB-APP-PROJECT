@@ -1,0 +1,460 @@
+package gui;
+
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
+import javafx.scene.control.*;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+
+import dao.ReportDAO;
+import report.EventScheduleReport;
+import repository.MerchReceiptRepo;
+import repository.MerchandiseRepo;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+
+public class ReportsScene {
+    private BorderPane root;
+    private Connection connection;
+    private TextArea reportDisplay;
+
+    public ReportsScene(Connection connection, MainMenuScene mainMenu) {
+        this.connection = connection;
+        root = new BorderPane();
+
+        HBox backButton = SceneUtils.createBackButton(mainMenu, connection);
+        root.setTop(backButton);
+
+        VBox mainContent = new VBox(20);
+        mainContent.setPadding(new Insets(20));
+
+        Label title = new Label("Event & Schedule Report Generator");
+        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        VBox reportSelection = createReportSelectionSection();
+
+        VBox reportArea = createReportDisplayArea();
+
+        mainContent.getChildren().addAll(title, reportSelection, reportArea);
+
+        ScrollPane scrollPane = new ScrollPane(mainContent);
+        scrollPane.setFitToWidth(true);
+        root.setCenter(scrollPane);
+    }
+
+    private VBox createReportSelectionSection() {
+        VBox section = new VBox(15);
+        section.setStyle("-fx-border-color: #3498db; -fx-border-width: 2; -fx-border-radius: 5; -fx-padding: 15;");
+
+        Label header = new Label("Generate Report");
+        header.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #3498db;");
+
+        VBox monthlySection = new VBox(10);
+        monthlySection.setStyle("-fx-background-color: #ecf0f1; -fx-padding: 15; -fx-border-radius: 5;");
+
+        Label monthlyLabel = new Label("📅 Monthly Report");
+        monthlyLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        HBox monthlyControls = new HBox(10);
+        monthlyControls.setAlignment(Pos.CENTER_LEFT);
+
+        Label lblMonth = new Label("Month:");
+        ComboBox<Integer> cmbMonth = new ComboBox<>();
+        for (int i = 1; i <= 12; i++) {
+            cmbMonth.getItems().add(i);
+        }
+        cmbMonth.setPromptText("Select Month");
+        cmbMonth.setPrefWidth(120);
+
+        Label lblYear = new Label("Year:");
+        ComboBox<Integer> cmbYear = new ComboBox<>();
+        int currentYear = java.time.Year.now().getValue();
+        for (int i = currentYear - 5; i <= currentYear + 1; i++) {
+            cmbYear.getItems().add(i);
+        }
+        cmbYear.setValue(currentYear);
+        cmbYear.setPrefWidth(100);
+
+        Button btnGenerateMonthly = new Button("Generate Monthly Report");
+        btnGenerateMonthly.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15;");
+
+        monthlyControls.getChildren().addAll(lblMonth, cmbMonth, lblYear, cmbYear, btnGenerateMonthly);
+        monthlySection.getChildren().addAll(monthlyLabel, monthlyControls);
+
+        VBox yearlySection = new VBox(10);
+        yearlySection.setStyle("-fx-background-color: #ecf0f1; -fx-padding: 15; -fx-border-radius: 5;");
+
+        Label yearlyLabel = new Label("📊 Yearly Report");
+        yearlyLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        HBox yearlyControls = new HBox(10);
+        yearlyControls.setAlignment(Pos.CENTER_LEFT);
+
+        Label lblYearOnly = new Label("Year:");
+        ComboBox<Integer> cmbYearOnly = new ComboBox<>();
+        for (int i = currentYear - 5; i <= currentYear + 1; i++) {
+            cmbYearOnly.getItems().add(i);
+        }
+        cmbYearOnly.setValue(currentYear);
+        cmbYearOnly.setPrefWidth(100);
+
+        Button btnGenerateYearly = new Button("Generate Yearly Report");
+        btnGenerateYearly.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15;");
+
+        yearlyControls.getChildren().addAll(lblYearOnly, cmbYearOnly, btnGenerateYearly);
+        yearlySection.getChildren().addAll(yearlyLabel, yearlyControls);
+
+        VBox periodsSection = new VBox(10);
+        periodsSection.setStyle("-fx-background-color: #ecf0f1; -fx-padding: 15; -fx-border-radius: 5;");
+
+        Label periodsLabel = new Label("🔍 View Available Periods");
+        periodsLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        Button btnViewPeriods = new Button("Show Available Periods");
+        btnViewPeriods.setStyle("-fx-background-color: #9b59b6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 15;");
+
+        periodsSection.getChildren().addAll(periodsLabel, btnViewPeriods);
+
+        btnGenerateMonthly.setOnAction(e -> {
+            Integer month = cmbMonth.getValue();
+            Integer year = cmbYear.getValue();
+
+            if (month == null || year == null) {
+                showWarning("Please select both month and year");
+                return;
+            }
+
+            generateMonthlyReport(month, year);
+        });
+
+        btnGenerateYearly.setOnAction(e -> {
+            Integer year = cmbYearOnly.getValue();
+
+            if (year == null) {
+                showWarning("Please select a year");
+                return;
+            }
+
+            generateYearlyReport(year);
+        });
+
+        btnViewPeriods.setOnAction(e -> viewAvailablePeriods());
+
+        section.getChildren().addAll(header, monthlySection, yearlySection, periodsSection);
+        return section;
+    }
+
+    private VBox createReportDisplayArea() {
+        VBox section = new VBox(10);
+        section.setStyle("-fx-border-color: #95a5a6; -fx-border-width: 2; -fx-border-radius: 5; -fx-padding: 15;");
+
+        Label header = new Label("Report Output");
+        header.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        reportDisplay = new TextArea();
+        reportDisplay.setEditable(false);
+        reportDisplay.setPrefHeight(400);
+        reportDisplay.setStyle("-fx-font-family: 'Courier New'; -fx-font-size: 13px;");
+        reportDisplay.setText("Select a report type above to generate...");
+
+        Button btnClear = new Button("Clear Report");
+        btnClear.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnClear.setOnAction(e -> reportDisplay.setText("Select a report type above to generate..."));
+
+        Button btnExport = new Button("Export to Text File");
+        btnExport.setStyle("-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnExport.setOnAction(e -> exportReport());
+
+        HBox buttonBox = new HBox(10, btnClear, btnExport);
+        buttonBox.setAlignment(Pos.CENTER_LEFT);
+
+        section.getChildren().addAll(header, reportDisplay, buttonBox);
+        return section;
+    }
+
+    private void generateMonthlyReport(int month, int year) {
+        try {
+            ReportDAO dao = new ReportDAO(connection, null, null);
+            EventScheduleReport report = dao.generateMonthlyReport(month, year);
+
+            if (report == null || report.getTotalEvents() == 0) {
+                reportDisplay.setText(formatNoDataMessage(month, year));
+                return;
+            }
+
+            String monthName = getMonthName(month);
+            StringBuilder output = new StringBuilder();
+
+            output.append("╔════════════════════════════════════════════════════════════════════╗\n");
+            output.append("║          EVENT & SCHEDULE REPORT - MONTHLY ANALYSIS                ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append(String.format("║ Period: %-58s ║\n", monthName + " " + year));
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append("║                         EVENT METRICS                              ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append(String.format("║ Total Number of Events:          %-33d ║\n", report.getTotalEvents()));
+            output.append(String.format("║ Average Booking Fee:             ₱%-32.2f ║\n", report.getAverageBookingFee()));
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append("║                       SCHEDULE METRICS                             ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append(String.format("║ Total Number of Schedules:       %-33d ║\n", report.getTotalSchedules()));
+            output.append(String.format("║ Average Schedules per Event:     %-33.2f ║\n", report.getAverageSchedulesPerEvent()));
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append("║                         SUMMARY                                    ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+
+            if (report.getTotalEvents() > 0) {
+                output.append("║ ✓ Events were scheduled during this period                         ║\n");
+
+                if (report.getAverageSchedulesPerEvent() >= 2.0) {
+                    output.append("║ ✓ Good scheduling frequency per event                              ║\n");
+                } else if (report.getAverageSchedulesPerEvent() >= 1.0) {
+                    output.append("║ ⚠ Moderate scheduling frequency                                    ║\n");
+                } else {
+                    output.append("║ ⚠ Low scheduling frequency per event                               ║\n");
+                }
+
+                if (report.getAverageBookingFee() > 5000) {
+                    output.append("║ ✓ Premium pricing tier (Avg > ₱5,000)                              ║\n");
+                } else if (report.getAverageBookingFee() > 2000) {
+                    output.append("║ ○ Standard pricing tier (Avg ₱2,000-5,000)                         ║\n");
+                } else {
+                    output.append("║ ○ Budget pricing tier (Avg < ₱2,000)                               ║\n");
+                }
+            }
+
+            output.append("╚════════════════════════════════════════════════════════════════════╝\n");
+            output.append("\nReport Generated: " + java.time.LocalDateTime.now().format(
+                    java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+            reportDisplay.setText(output.toString());
+
+        } catch (SQLException ex) {
+            showError("Report Generation Failed", ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    private void generateYearlyReport(int year) {
+        try {
+            ReportDAO dao = new ReportDAO(connection, null, null);
+            EventScheduleReport report = dao.generateYearlyReport(year);
+
+            if (report == null || report.getTotalEvents() == 0) {
+                reportDisplay.setText(formatNoDataMessageYear(year));
+                return;
+            }
+
+            StringBuilder output = new StringBuilder();
+
+            output.append("╔════════════════════════════════════════════════════════════════════╗\n");
+            output.append("║          EVENT & SCHEDULE REPORT - YEARLY ANALYSIS                 ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append(String.format("║ Period: Year %-54d ║\n", year));
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append("║                         EVENT METRICS                              ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append(String.format("║ Total Number of Events:          %-33d ║\n", report.getTotalEvents()));
+            output.append(String.format("║ Average Booking Fee:             ₱%-32.2f ║\n", report.getAverageBookingFee()));
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append("║                       SCHEDULE METRICS                             ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append(String.format("║ Total Number of Schedules:       %-33d ║\n", report.getTotalSchedules()));
+            output.append(String.format("║ Average Schedules per Event:     %-33.2f ║\n", report.getAverageSchedulesPerEvent()));
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append("║                    ANNUAL PERFORMANCE                              ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+
+            double avgEventsPerMonth = report.getTotalEvents() / 12.0;
+            double avgSchedulesPerMonth = report.getTotalSchedules() / 12.0;
+
+            output.append(String.format("║ Average Events per Month:        %-33.2f ║\n", avgEventsPerMonth));
+            output.append(String.format("║ Average Schedules per Month:     %-33.2f ║\n", avgSchedulesPerMonth));
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append("║                         SUMMARY                                    ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+
+            if (report.getTotalEvents() >= 50) {
+                output.append("║ ✓ High activity year (50+ events)                                  ║\n");
+            } else if (report.getTotalEvents() >= 20) {
+                output.append("║ ✓ Moderate activity year (20-49 events)                            ║\n");
+            } else if (report.getTotalEvents() > 0) {
+                output.append("║ ○ Low activity year (<20 events)                                   ║\n");
+            }
+
+            if (avgEventsPerMonth >= 4.0) {
+                output.append("║ ✓ Consistent monthly event scheduling                              ║\n");
+            } else if (avgEventsPerMonth >= 2.0) {
+                output.append("║ ○ Moderate monthly event frequency                                 ║\n");
+            } else {
+                output.append("║ ⚠ Sparse event scheduling throughout the year                      ║\n");
+            }
+
+            output.append("╚════════════════════════════════════════════════════════════════════╝\n");
+            output.append("\nReport Generated: " + java.time.LocalDateTime.now().format(
+                    java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+            reportDisplay.setText(output.toString());
+
+        } catch (SQLException ex) {
+            showError("Report Generation Failed", ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    private void viewAvailablePeriods() {
+        try {
+            ReportDAO dao = new ReportDAO(connection, null, null);
+            List<String> months = dao.getAvailableMonths();
+            List<Integer> years = dao.getAvailableYears();
+
+            StringBuilder output = new StringBuilder();
+
+            output.append("╔════════════════════════════════════════════════════════════════════╗\n");
+            output.append("║              AVAILABLE REPORTING PERIODS                           ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append("║                    AVAILABLE MONTHS                                ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+
+            if (months.isEmpty()) {
+                output.append("║ No schedule data available in the database.                        ║\n");
+            } else {
+                for (String monthStr : months) {
+                    output.append(String.format("║ • %-64s ║\n", monthStr));
+                }
+            }
+
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+            output.append("║                     AVAILABLE YEARS                                ║\n");
+            output.append("╠════════════════════════════════════════════════════════════════════╣\n");
+
+            if (years.isEmpty()) {
+                output.append("║ No schedule data available in the database.                        ║\n");
+            } else {
+                StringBuilder yearLine = new StringBuilder("║ Years: ");
+                for (int i = 0; i < years.size(); i++) {
+                    yearLine.append(years.get(i));
+                    if (i < years.size() - 1) {
+                        yearLine.append(", ");
+                    }
+                }
+                while (yearLine.length() < 69) {
+                    yearLine.append(" ");
+                }
+                yearLine.append("║");
+                output.append(yearLine).append("\n");
+            }
+
+            output.append("╚════════════════════════════════════════════════════════════════════╝\n");
+            output.append("\nTip: Use the periods above to generate monthly or yearly reports.");
+
+            reportDisplay.setText(output.toString());
+
+        } catch (SQLException ex) {
+            showError("Failed to Load Available Periods", ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    private String formatNoDataMessage(int month, int year) {
+        String monthName = getMonthName(month);
+        return String.format("""
+            ╔════════════════════════════════════════════════════════════════════╗
+            ║                      NO DATA AVAILABLE                             ║
+            ╠════════════════════════════════════════════════════════════════════╣
+            ║ Period: %-58s ║
+            ╠════════════════════════════════════════════════════════════════════╣
+            ║ No events or schedules found for this period.                      ║
+            ║                                                                    ║
+            ║ Suggestions:                                                       ║
+            ║ • Check if events have been added to the system                    ║
+            ║ • Verify that schedules are associated with events                 ║
+            ║ • Try a different month or year                                    ║
+            ║ • Click "Show Available Periods" to see valid date ranges          ║
+            ╚════════════════════════════════════════════════════════════════════╝
+            """, monthName + " " + year);
+    }
+
+    private String formatNoDataMessageYear(int year) {
+        return String.format("""
+            ╔════════════════════════════════════════════════════════════════════╗
+            ║                      NO DATA AVAILABLE                             ║
+            ╠════════════════════════════════════════════════════════════════════╣
+            ║ Period: Year %-54d ║
+            ╠════════════════════════════════════════════════════════════════════╣
+            ║ No events or schedules found for this year.                        ║
+            ║                                                                    ║
+            ║ Suggestions:                                                       ║
+            ║ • Check if events have been added to the system                    ║
+            ║ • Verify that schedules are associated with events                 ║
+            ║ • Try a different year                                             ║
+            ║ • Click "Show Available Periods" to see valid date ranges          ║
+            ╚════════════════════════════════════════════════════════════════════╝
+            """, year);
+    }
+
+    private void exportReport() {
+        if (reportDisplay.getText().isEmpty() ||
+                reportDisplay.getText().equals("Select a report type above to generate...")) {
+            showWarning("No report to export. Please generate a report first.");
+            return;
+        }
+
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Export Report");
+        fileChooser.setInitialFileName("event_schedule_report_" +
+                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt");
+        fileChooser.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("Text Files", "*.txt")
+        );
+
+        java.io.File file = fileChooser.showSaveDialog(root.getScene().getWindow());
+
+        if (file != null) {
+            try (java.io.PrintWriter writer = new java.io.PrintWriter(file)) {
+                writer.println(reportDisplay.getText());
+                showSuccess("Report exported successfully to:\n" + file.getAbsolutePath());
+            } catch (java.io.IOException ex) {
+                showError("Export Failed", "Could not save file: " + ex.getMessage());
+            }
+        }
+    }
+
+    private String getMonthName(int month) {
+        String[] months = {"", "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"};
+        return months[month];
+    }
+
+    public BorderPane getRoot() {
+        return root;
+    }
+
+    private void showError(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showWarning(String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Warning");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showSuccess(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+}

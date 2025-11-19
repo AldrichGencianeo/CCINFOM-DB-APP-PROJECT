@@ -56,7 +56,6 @@ public class MainMenuScene {
         // Manage Merchandise
         btnMerchandise.setOnAction(e -> {
             MerchandiseScene scene = new MerchandiseScene(connection, this);
-            // Clear the root completely and set the new scene
             root.setTop(null);
             root.setCenter(null);
             root.setBottom(null);
@@ -84,16 +83,26 @@ public class MainMenuScene {
 //        });
 
         // Merchandise Transaction
-//        btnMerchTrans.setOnAction(e -> {
-//            MerchTransactionScene scene = new MerchTransactionScene(connection, this);
-//            root.getChildren().setAll(scene.getRoot());
-//        });
+        btnMerchTrans.setOnAction(e -> {
+            MerchTransactionScene scene = new MerchTransactionScene(connection, this);
+            root.setTop(null);
+            root.setCenter(null);
+            root.setBottom(null);
+            root.setLeft(null);
+            root.setRight(null);
+            root.setCenter(scene.getRoot());
+        });
 
         // Generate Reports
-//        btnReports.setOnAction(e -> {
-//            ReportsScene scene = new ReportsScene(connection, this);
-//            root.getChildren().setAll(scene.getRoot());
-//        });
+        btnReports.setOnAction(e -> {
+            ReportsScene scene = new ReportsScene(connection, this);
+            root.setTop(null);
+            root.setCenter(null);
+            root.setBottom(null);
+            root.setLeft(null);
+            root.setRight(null);
+            root.setCenter(scene.getRoot());
+        });
     }
 
     public void showMainMenu() {
