@@ -65,11 +65,17 @@ public class MainMenuScene {
         });
 
         // Manage Sections
-//        btnSections.setOnAction(e -> {
-//            SectionScene scene = new SectionScene(connection, this);
-//            root.getChildren().setAll(scene.getRoot());
-//        });
-
+        btnSections.setOnAction(e -> {
+            SectionScene scene = new SectionScene(connection, this);
+            // Clear root and set center like the other buttons
+            root.setTop(null);
+            root.setCenter(null);
+            root.setBottom(null);
+            root.setLeft(null);
+            root.setRight(null);
+            root.setCenter(scene.getRoot());
+        });
+        
         // Book Ticket
         btnBookTicket.setOnAction(e -> {
             BookTicketScene scene = new BookTicketScene(connection, this);
@@ -82,10 +88,15 @@ public class MainMenuScene {
         });
 
         // Manage Schedules
-//        btnSchedules.setOnAction(e -> {
-//            ScheduleScene scene = new ScheduleScene(connection, this);
-//            root.getChildren().setAll(scene.getRoot());
-//        });
+        btnSchedules.setOnAction(e -> {
+            ScheduleScene scene = new ScheduleScene(connection, this);
+            root.setTop(null);
+            root.setCenter(null);
+            root.setBottom(null);
+            root.setLeft(null);
+            root.setRight(null);
+            root.setCenter(scene.getRoot());
+        });
 
         // Merchandise Transaction
         btnMerchTrans.setOnAction(e -> {

@@ -103,7 +103,6 @@ public class SectionDAO {
                 sch.scheduleID,
                 sch.scheduleDate,
                 ss.price,
-                ss.availableSlots - COUNT(t.ticketID) AS availableSlots,
                 COUNT(t.ticketID) AS tickets_sold
             FROM section s
             JOIN schedule_section ss ON s.sectionID = ss.sectionID
@@ -118,8 +117,7 @@ public class SectionDAO {
                 e.eventname, 
                 sch.scheduleID, 
                 sch.scheduleDate,
-                ss.price, 
-                ss.availableSlots
+                ss.price
             ORDER BY 
                 sch.scheduleDate, 
                 e.eventname;
@@ -140,7 +138,7 @@ public class SectionDAO {
                     Date scheduleDate = resultSet.getDate("scheduleDate");
                     double price = resultSet.getDouble("price");
                     int ticketsSold = resultSet.getInt("tickets_sold");
-                    int availableSlots = resultSet.getInt("availableSlots");
+                    int availableSlots = section.getCapacity() - ticketsSold;
 
                     System.out.printf("  Event: %s (ScheduleID: %d, Date: %s)%n", eventName, scheduleID, scheduleDate);
                     System.out.printf("  Price: %.2f%n", price);

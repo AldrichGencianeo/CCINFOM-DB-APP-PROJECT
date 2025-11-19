@@ -4,6 +4,7 @@ import model.MerchReceipt;
 import model.Merchandise;
 import report.EventScheduleReport;
 import report.MerchSalesReport;
+import report.TicketSalesReport;
 import repository.MerchReceiptRepo;
 import repository.MerchandiseRepo;
 
@@ -92,6 +93,46 @@ public class ReportDAO {
         return months[month];
     }
 
+    public void displayMonthlyReport(int month, int year) throws SQLException {
+        EventScheduleReport report = generateMonthlyReport(month, year);
+
+        if (report == null || report.getTotalEvents() == 0) {
+            System.out.println("\n=== NO DATA FOUND FOR " + getMonthName(month) + " " + year + " ===");
+            return;
+        }
+
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║         EVENT & SCHEDULE REPORT - MONTHLY                  ║");
+        System.out.println("╠════════════════════════════════════════════════════════════╣");
+        System.out.printf("║ Period: %-50s ║%n", report.getTimePeriod());
+        System.out.println("╠════════════════════════════════════════════════════════════╣");
+        System.out.printf("║ Total Number of Events:          %-25d ║%n", report.getTotalEvents());
+        System.out.printf("║ Average Booking Fee:             ₱%-24.2f ║%n", report.getAverageBookingFee());
+        System.out.printf("║ Total Number of Schedules:       %-25d ║%n", report.getTotalSchedules());
+        System.out.printf("║ Average Schedules per model.Event:     %-25.2f ║%n", report.getAverageSchedulesPerEvent());
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+    }
+
+    public void displayYearlyReport(int year) throws SQLException {
+        EventScheduleReport report = generateYearlyReport(year);
+
+        if (report == null || report.getTotalEvents() == 0) {
+            System.out.println("\n=== NO DATA FOUND FOR YEAR " + year + " ===");
+            return;
+        }
+
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║         EVENT & SCHEDULE REPORT - YEARLY                   ║");
+        System.out.println("╠════════════════════════════════════════════════════════════╣");
+        System.out.printf("║ Period: %-50s ║%n", report.getTimePeriod());
+        System.out.println("╠════════════════════════════════════════════════════════════╣");
+        System.out.printf("║ Total Number of Events:          %-25d ║%n", report.getTotalEvents());
+        System.out.printf("║ Average Booking Fee:             ₱%-24.2f ║%n", report.getAverageBookingFee());
+        System.out.printf("║ Total Number of Schedules:       %-25d ║%n", report.getTotalSchedules());
+        System.out.printf("║ Average Schedules per model.Event:     %-25.2f ║%n", report.getAverageSchedulesPerEvent());
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+    }
+
     public List<String> getAvailableMonths() throws SQLException {
         List<String> months = new ArrayList<>();
         String sql = """
@@ -128,11 +169,6 @@ public class ReportDAO {
         return years;
     }
 
-    /*
-     * ==========================
-     * MERCH SALES REPORT
-     * ==========================
-     */
     public List<MerchSalesReport> generateReportPerEvent(int eventID) {
         List<MerchReceipt> receipts = merchReceiptRepo.findByEventID(eventID);
         Map<Integer, Integer> soldCount = new HashMap<>();
@@ -178,4 +214,112 @@ public class ReportDAO {
 
         return report;
     }
+
+    public List<TicketSalesReport> generateDailyTicketReport(int year, int month) throws SQLException {
+        String sql = """
+            SELECT
+                DAY(purchaseDate) AS day,
+                COUNT(*) AS totalTicketsSold,
+                SUM(ticketPrice) AS totalRevenue,
+                AVG(ticketPrice) AS averagePrice
+            FROM tickets
+            WHERE status != 'CA'
+            AND YEAR(purchaseDate) = ?
+            AND MONTH(purchaseDate) = ?
+            GROUP BY DAY(purchaseDate)
+            ORDER BY day;
+        """;
+
+        List<TicketSalesReport> reports = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    reports.add(new TicketSalesReport(
+                        rs.getInt("totalTicketsSold"),
+                        rs.getDouble("totalRevenue"),
+                        rs.getDouble("averagePrice"),
+                        "Daily",
+                        rs.getInt("day"),
+                        month,
+                        year
+                    ));
+                }
+            }
+        }
+        return reports;
+    }
+
+    public List<TicketSalesReport> generateWeeklyTicketReport(int year) throws SQLException {
+        String sql = """
+            SELECT
+                WEEK(purchaseDate) AS weekNumber,
+                COUNT(*) AS totalTicketsSold,
+                SUM(ticketPrice) AS totalRevenue,
+                AVG(ticketPrice) AS averagePrice
+            FROM tickets
+            WHERE status != 'CA'
+            AND YEAR(purchaseDate) = ?
+            GROUP BY WEEK(purchaseDate)
+            ORDER BY weekNumber;
+        """;
+
+        List<TicketSalesReport> reports = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    reports.add(new TicketSalesReport(
+                        rs.getInt("totalTicketsSold"),
+                        rs.getDouble("totalRevenue"),
+                        rs.getDouble("averagePrice"),
+                        "Weekly",
+                        rs.getInt("weekNumber"),
+                        0,
+                        year
+                    ));
+                }
+            }
+        }
+        return reports;
+    }
+
+    public List<TicketSalesReport> generateMonthlyTicketReport(int year) throws SQLException {
+        String sql = """
+            SELECT
+                MONTH(purchaseDate) AS month,
+                COUNT(*) AS totalTicketsSold,
+                SUM(ticketPrice) AS totalRevenue,
+                AVG(ticketPrice) AS averagePrice
+            FROM tickets
+            WHERE status != 'CA'
+            AND YEAR(purchaseDate) = ?
+            GROUP BY MONTH(purchaseDate)
+            ORDER BY month;
+        """;
+
+        List<TicketSalesReport> reports = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    reports.add(new TicketSalesReport(
+                        rs.getInt("totalTicketsSold"),
+                        rs.getDouble("totalRevenue"),
+                        rs.getDouble("averagePrice"),
+                        "Monthly",
+                        0,
+                        rs.getInt("month"),
+                        year
+                    ));
+                }
+            }
+        }
+        return reports;
+    }
+
 }

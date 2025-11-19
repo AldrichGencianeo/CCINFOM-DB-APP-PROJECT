@@ -27,5 +27,6 @@
     </orderEntry>
     <orderEntry type="library" name="mysql-connector-j-9.5.0" level="project" />
     <orderEntry type="library" name="lib" level="project" />
+    <orderEntry type="library" exported="" name="JavaFX25" level="application" />
   </component>
 </module>

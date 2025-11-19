@@ -128,4 +128,30 @@ public class ScheduleDAO {
         }
         return list;
     }
+
+    public int getAvailableSlots(int scheduleID, int sectionID) throws SQLException {
+        String sql = """
+            SELECT ss.availableSlots - COUNT(t.ticketID) AS remainingSlots
+            FROM schedule_section ss
+            LEFT JOIN tickets t 
+                ON t.scheduleID = ss.scheduleID
+                AND t.sectionID = ss.sectionID
+                AND t.status != 'CA'
+            WHERE ss.scheduleID = ? AND ss.sectionID = ?
+            GROUP BY ss.availableSlots
+        """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, scheduleID);
+            stmt.setInt(2, sectionID);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("remainingSlots");
+                }
+            }
+        }
+
+        return 0;
+    }
 }

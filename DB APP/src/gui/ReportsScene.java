@@ -219,7 +219,88 @@ public class ReportsScene {
             reportDisplay.setText(formatMerchReport(title, list));
         });
 
-        section.getChildren().addAll(header, monthlySection, yearlySection, periodsSection, merchSection);
+        VBox ticketSection = new VBox(10);
+        ticketSection.setStyle("-fx-background-color: #ecf0f1; -fx-padding: 15; -fx-border-radius: 5;");
+
+        Label ticketLabel = new Label("🎟 Ticket Sales Analytics");
+        ticketLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        HBox ticketControls = new HBox(10);
+        ticketControls.setAlignment(Pos.CENTER_LEFT);
+
+        Label lblMonth3 = new Label("Month:");
+        ComboBox<Integer> cmbMonth3 = new ComboBox<>();
+        for (int i = 1; i <= 12; i++) cmbMonth3.getItems().add(i);
+        cmbMonth3.setPrefWidth(80);
+
+        Label lblYear3 = new Label("Year:");
+        ComboBox<Integer> cmbYear3 = new ComboBox<>();
+        for (int i = currYear - 5; i <= currYear + 1; i++) cmbYear3.getItems().add(i);
+        cmbYear3.setValue(currYear);
+        cmbYear3.setPrefWidth(100);
+
+        Button btnDailyTicket = new Button("Daily Report");
+        Button btnWeeklyTicket = new Button("Weekly Report");
+        Button btnMonthlyTicket = new Button("Monthly Report");
+
+        btnDailyTicket.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-padding: 8 15;");
+        btnWeeklyTicket.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-padding: 8 15;");
+        btnMonthlyTicket.setStyle("-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-padding: 8 15;");
+
+        ticketControls.getChildren().addAll(lblMonth3, cmbMonth3, lblYear3, cmbYear3, btnDailyTicket, btnWeeklyTicket, btnMonthlyTicket);
+        ticketSection.getChildren().addAll(ticketLabel, ticketControls);
+
+        btnDailyTicket.setOnAction(e -> {
+            Integer month = cmbMonth3.getValue();
+            Integer year = cmbYear3.getValue();
+            if (month == null || year == null) {
+                showWarning("Please select Month and Year for Daily Report.");
+                return;
+            }
+            try {
+                ReportDAO dao = new ReportDAO(connection, null, null);
+                List<report.TicketSalesReport> list = dao.generateDailyTicketReport(year, month);
+                String reportTitle = "DAILY TICKET SALES - " + getMonthName(month) + " " + year;
+                reportDisplay.setText(formatTicketReport(reportTitle, list));
+            } catch (SQLException ex) {
+                showError("Database Error", ex.getMessage());
+            }
+        });
+
+        btnWeeklyTicket.setOnAction(e -> {
+            Integer year = cmbYear3.getValue();
+            if (year == null) {
+                showWarning("Please select a Year for Weekly Report.");
+                return;
+            }
+            try {
+                ReportDAO dao = new ReportDAO(connection, null, null);
+                List<report.TicketSalesReport> list = dao.generateWeeklyTicketReport(year);
+                String reportTitle = "WEEKLY TICKET SALES - YEAR " + year;
+                reportDisplay.setText(formatTicketReport(reportTitle, list));
+            } catch (SQLException ex) {
+                showError("Database Error", ex.getMessage());
+            }
+        });
+
+        btnMonthlyTicket.setOnAction(e -> {
+            Integer year = cmbYear3.getValue();
+            if (year == null) {
+                showWarning("Please select a Year for Monthly Report.");
+                return;
+            }
+            try {
+                ReportDAO dao = new ReportDAO(connection, null, null);
+                List<report.TicketSalesReport> list = dao.generateMonthlyTicketReport(year);
+                String reportTitle = "MONTHLY TICKET SALES - YEAR " + year;
+                reportDisplay.setText(formatTicketReport(reportTitle, list));
+            } catch (SQLException ex) {
+                showError("Database Error", ex.getMessage());
+            }
+        });
+
+        section.getChildren().addAll(header, monthlySection, yearlySection, periodsSection, merchSection, ticketSection);
+
         return section;
     }
 
@@ -562,5 +643,54 @@ public class ReportsScene {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private String formatTicketReport(String title, List<report.TicketSalesReport> list) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("╔════════════════════════════════════════════════════════════════════╗\n");
+        sb.append(String.format("║ %-66s ║\n", title));
+        sb.append("╠════════════════════════════════════════════════════════════════════╣\n");
+
+        if (list == null || list.isEmpty()) {
+            sb.append("║ No ticket sales found for this period.                             ║\n");
+            sb.append("╚════════════════════════════════════════════════════════════════════╝\n");
+            return sb.toString();
+        }
+
+        sb.append("║ PERIOD (Day/Week/Month) | TICKETS SOLD | AVG PRICE  | REVENUE      ║\n");
+        sb.append("╠═════════════════════════╬══════════════╬════════════╬══════════════╣\n");
+
+        double grandTotalRevenue = 0;
+        int grandTotalTickets = 0;
+
+        for (report.TicketSalesReport r : list) {
+            String periodLabel = "";
+            
+            if (title.contains("DAILY")) {
+                periodLabel = "Day " + r.getDay();
+            } else if (title.contains("WEEKLY")) {
+                periodLabel = "Week " + r.getDay(); 
+            } else if (title.contains("MONTHLY")) {
+                periodLabel = getMonthName(r.getMonth());
+            }
+
+            sb.append(String.format(
+                    "║ %-23s | %-12d | ₱%-9.2f | ₱%-11.2f ║\n",
+                    periodLabel,
+                    r.getTotalTicketsSold(),
+                    r.getAveragePrice(),
+                    r.getTotalRevenue()
+            ));
+
+            grandTotalRevenue += r.getTotalRevenue();
+            grandTotalTickets += r.getTotalTicketsSold();
+        }
+
+        sb.append("╠═════════════════════════╬══════════════╬════════════╬══════════════╣\n");
+        sb.append(String.format("║ TOTALS                  | %-12d |            | ₱%-11.2f ║\n", grandTotalTickets, grandTotalRevenue));
+        sb.append("╚═════════════════════════╩══════════════╩════════════╩══════════════╝\n");
+
+        return sb.toString();
     }
 }
