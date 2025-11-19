@@ -10,8 +10,11 @@ import javafx.geometry.Pos;
 
 import dao.ReportDAO;
 import report.EventScheduleReport;
+import report.MerchSalesReport;
 import repository.MerchReceiptRepo;
 import repository.MerchandiseRepo;
+import repository.MerchReceiptRepoImpl;
+import repository.MerchRepoImpl;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -144,7 +147,86 @@ public class ReportsScene {
 
         btnViewPeriods.setOnAction(e -> viewAvailablePeriods());
 
-        section.getChildren().addAll(header, monthlySection, yearlySection, periodsSection);
+        // ================= MERCH REPORT SECTION =======================
+        VBox merchSection = new VBox(10);
+        merchSection.setStyle("-fx-background-color: #ecf0f1; -fx-padding: 15; -fx-border-radius: 5;");
+
+        Label merchLabel = new Label("🛒 Merchandise Sales Report");
+        merchLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        HBox merchControls = new HBox(10);
+        merchControls.setAlignment(Pos.CENTER_LEFT);
+
+        // --- Per Event ---
+        Label lblEvent = new Label("Event ID:");
+        TextField txtEventID = new TextField();
+        txtEventID.setPromptText("ex: 101");
+        txtEventID.setPrefWidth(120);
+
+        Button btnEventReport = new Button("Generate Per Event");
+        btnEventReport.setStyle("-fx-background-color: #e67e22; -fx-text-fill: white; -fx-padding: 8 15;");
+
+        // --- Per Month ---
+        Label lblMonth2 = new Label("Month:");
+        ComboBox<Integer> cmbMonth2 = new ComboBox<>();
+        for (int i = 1; i <= 12; i++) cmbMonth2.getItems().add(i);
+        cmbMonth2.setPrefWidth(80);
+
+        Label lblYear2 = new Label("Year:");
+        ComboBox<Integer> cmbYear2 = new ComboBox<>();
+        int currYear = java.time.Year.now().getValue();
+        for (int i = currYear - 5; i <= currYear + 1; i++) cmbYear2.getItems().add(i);
+        cmbYear2.setValue(currYear);
+        cmbYear2.setPrefWidth(100);
+
+        Button btnMonthlyMerch = new Button("Generate Monthly Merch");
+        btnMonthlyMerch.setStyle("-fx-background-color: #e67e22; -fx-text-fill: white; -fx-padding: 8 15;");
+
+        merchControls.getChildren().addAll(
+                lblEvent, txtEventID, btnEventReport,
+                lblMonth2, cmbMonth2, lblYear2, cmbYear2, btnMonthlyMerch
+        );
+
+        merchSection.getChildren().addAll(merchLabel, merchControls);
+
+        // --- Event Handler for Per Event Report ---
+        btnEventReport.setOnAction(e -> {
+            try {
+                if (txtEventID.getText().isEmpty()) {
+                    showWarning("Please enter an Event ID.");
+                    return;
+                }
+
+                int eventID = Integer.parseInt(txtEventID.getText());
+                ReportDAO dao = new ReportDAO(connection, new MerchReceiptRepoImpl(connection), new MerchRepoImpl(connection));
+                List<MerchSalesReport> list = dao.generateReportPerEvent(eventID);
+
+                String title = "MERCH SALES REPORT (EVENT ID: " + eventID + ")";
+                reportDisplay.setText(formatMerchReport(title, list));
+
+            } catch (NumberFormatException ex) {
+                showError("Invalid Input", "Please enter a valid Event ID.");
+            }
+        });
+
+        // --- Event Handler for Monthly Merch Report ---
+        btnMonthlyMerch.setOnAction(e -> {
+            Integer month = cmbMonth2.getValue();
+            Integer year = cmbYear2.getValue();
+
+            if (month == null || year == null) {
+                showWarning("Please select both month and year.");
+                return;
+            }
+
+            ReportDAO dao = new ReportDAO(connection, new MerchReceiptRepoImpl(connection), new MerchRepoImpl(connection));
+            List<MerchSalesReport> list = dao.generateReportPerMonth(year, month);
+
+            String title = "MERCH SALES REPORT (" + getMonthName(month) + " " + year + ")";
+            reportDisplay.setText(formatMerchReport(title, list));
+        });
+
+        section.getChildren().addAll(header, monthlySection, yearlySection, periodsSection, merchSection);
         return section;
     }
 
@@ -304,6 +386,87 @@ public class ReportsScene {
             showError("Report Generation Failed", ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+    private String formatMerchReport(String title, List<MerchSalesReport> list) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("╔════════════════════════════════════════════════════════════════════╗\n");
+        sb.append(String.format("║ %62s ║\n", title));
+        sb.append("╠════════════════════════════════════════════════════════════════════╣\n");
+
+        if (list == null || list.isEmpty()) {
+            sb.append("║ No merchandise sales found for this period.                        ║\n");
+            sb.append("╚════════════════════════════════════════════════════════════════════╝\n");
+            return sb.toString();
+        }
+
+        sb.append("║  ID   | MERCH NAME                     | SOLD | REVENUE    | STOCK ║\n");
+        sb.append("╠═══════╬════════════════════════════════╬══════╬════════════╬═══════╣\n");
+
+        for (MerchSalesReport r : list) {
+            sb.append(String.format(
+                    "║ %-5d | %-30s | %-4d | ₱%-9.2f | %-5d ║\n",
+                    r.getMerchandiseID(),
+                    r.getName(),
+                    r.getSold(),
+                    r.getRevenue(),
+                    r.getRemainingStock()
+            ));
+        }
+
+        sb.append("╚════════════════════════════════════════════════════════════════════╝\n");
+        return sb.toString();
+    }
+
+    private void generateMerchSalesReport(int month, int year) {
+        // Use the concrete implementations here
+        ReportDAO dao = new ReportDAO(
+                connection,
+                new MerchReceiptRepoImpl(connection),
+                new MerchRepoImpl(connection)
+        );
+
+        // Call the correct method
+        List<MerchSalesReport> merchReport = dao.generateReportPerMonth(year, month);
+
+        if (merchReport == null || merchReport.isEmpty()) {
+            reportDisplay.setText("No merchandise sales recorded for " + getMonthName(month) + " " + year);
+            return;
+        }
+
+        // Compute total quantity and revenue
+        int totalQuantity = merchReport.stream().mapToInt(MerchSalesReport::getSold).sum();
+        double totalRevenue = merchReport.stream().mapToDouble(MerchSalesReport::getRevenue).sum();
+
+        StringBuilder out = new StringBuilder();
+
+        out.append("╔════════════════════════════════════════════════════════════════════╗\n");
+        out.append("║                    MERCHANDISE SALES REPORT                         ║\n");
+        out.append("╠════════════════════════════════════════════════════════════════════╣\n");
+        out.append(String.format("║ Period: %-58s ║\n", getMonthName(month) + " " + year));
+        out.append("╠════════════════════════════════════════════════════════════════════╣\n");
+
+        out.append(String.format("║ Total Items Sold: %-45d ║\n", totalQuantity));
+        out.append(String.format("║ Total Sales Revenue: ₱%-41.2f ║\n", totalRevenue));
+        out.append("╠════════════════════════════════════════════════════════════════════╣\n");
+        out.append("║                     SALES BREAKDOWN BY ITEM                         ║\n");
+        out.append("╠════════════════════════════════════════════════════════════════════╣\n");
+
+        for (MerchSalesReport item : merchReport) {
+            out.append(String.format("║ %-20s  Qty: %-8d  Revenue: ₱%-12.2f ║\n",
+                    item.getName(),
+                    item.getSold(),
+                    item.getRevenue()));
+        }
+
+        out.append("╚════════════════════════════════════════════════════════════════════╝\n");
+        out.append("\nReport Generated: " +
+                java.time.LocalDateTime.now().format(
+                        java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        );
+
+        reportDisplay.setText(out.toString());
     }
 
     private void viewAvailablePeriods() {

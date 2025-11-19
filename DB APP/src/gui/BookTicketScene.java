@@ -6,6 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -16,21 +17,23 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class BookTicketScene {
+    private BorderPane wrapper;     // NEW: BorderPane
     private VBox root;
     private Connection connection;
     private MainMenuScene mainMenu;
-    private TextField tfTicketID;
-    private Button btnCancel;
 
     private ComboBox<String> cbCustomer;
     private ComboBox<String> cbEvent;
     private ComboBox<String> cbSchedule;
     private ComboBox<String> cbSection;
     private Button btnBook;
+    private Button btnCancel;
 
     public BookTicketScene(Connection connection, MainMenuScene mainMenu) {
         this.connection = connection;
         this.mainMenu = mainMenu;
+
+        wrapper = new BorderPane();     // NEW
 
         root = new VBox(10);
         root.setPadding(new Insets(20));
@@ -49,12 +52,13 @@ public class BookTicketScene {
         cbSection.setPromptText("Select Section");
 
         btnBook = new Button("Book Ticket");
-
         btnCancel = new Button("Cancel Ticket");
 
-        root.getChildren().addAll(cbCustomer, cbEvent, cbSchedule, cbSection, btnBook, btnCancel);
+        root.getChildren().addAll(
+                cbCustomer, cbEvent, cbSchedule, cbSection,
+                btnBook, btnCancel
+        );
 
-        // Populate customers and events
         populateCustomers();
         populateEvents();
         populateSections();
@@ -62,6 +66,10 @@ public class BookTicketScene {
         btnBook.setOnAction(e -> bookTicket());
         btnCancel.setOnAction(e -> cancelTicket());
 
+        // NEW: Add back button + scene content
+        wrapper.setTop(SceneUtils.createBackButton(mainMenu, connection));
+        wrapper.setCenter(root);
+        BorderPane.setAlignment(root, Pos.CENTER);
     }
 
     private void populateCustomers() {
@@ -101,10 +109,10 @@ public class BookTicketScene {
 
         try {
             String sql = """
-            SELECT s.scheduleID, s.scheduleDate, s.startTime, s.endTime
-            FROM schedules s
-            WHERE s.eventID = ?
-            ORDER BY s.scheduleDate, s.startTime
+                SELECT s.scheduleID, s.scheduleDate, s.startTime, s.endTime
+                FROM schedules s
+                WHERE s.eventID = ?
+                ORDER BY s.scheduleDate, s.startTime
             """;
 
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -112,8 +120,9 @@ public class BookTicketScene {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     int scheduleID = rs.getInt("scheduleID");
-                    cbSchedule.getItems().add(scheduleID + " - " + rs.getDate("scheduleDate") +
-                            " " + rs.getTime("startTime") + "-" + rs.getTime("endTime"));
+                    cbSchedule.getItems().add(scheduleID + " - " +
+                            rs.getDate("scheduleDate") + " " +
+                            rs.getTime("startTime") + "-" + rs.getTime("endTime"));
                 }
             }
 
@@ -132,10 +141,10 @@ public class BookTicketScene {
 
         try {
             String sql = """
-            SELECT sec.sectionID, sec.sectionname, ss.availableSlots
-            FROM schedule_section ss
-            JOIN section sec ON ss.sectionID = sec.sectionID
-            WHERE ss.scheduleID = ?
+                SELECT sec.sectionID, sec.sectionname, ss.availableSlots
+                FROM schedule_section ss
+                JOIN section sec ON ss.sectionID = sec.sectionID
+                WHERE ss.scheduleID = ?
             """;
 
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -145,7 +154,9 @@ public class BookTicketScene {
                     int sectionID = rs.getInt("sectionID");
                     String sectionName = rs.getString("sectionname");
                     int availableSlots = rs.getInt("availableSlots");
-                    cbSection.getItems().add(sectionID + " - " + sectionName + " (Available: " + availableSlots + ")");
+                    cbSection.getItems().add(
+                            sectionID + " - " + sectionName + " (Available: " + availableSlots + ")"
+                    );
                 }
             }
         } catch (SQLException ex) {
@@ -155,7 +166,10 @@ public class BookTicketScene {
 
     private void bookTicket() {
         try {
-            if (cbCustomer.getValue() == null || cbSchedule.getValue() == null || cbSection.getValue() == null) {
+            if (cbCustomer.getValue() == null ||
+                    cbSchedule.getValue() == null ||
+                    cbSection.getValue() == null) {
+
                 showAlert("Error", "Please select customer, schedule, and section.");
                 return;
             }
@@ -191,6 +205,7 @@ public class BookTicketScene {
         tfTicketID.setPromptText("Ticket ID");
 
         Button btnConfirm = new Button("Cancel Ticket");
+
         box.getChildren().addAll(tfTicketID, btnConfirm);
 
         btnConfirm.setOnAction(e -> {
@@ -221,7 +236,7 @@ public class BookTicketScene {
 
         Scene scene = new Scene(box);
         popup.setScene(scene);
-        popup.initOwner(root.getScene().getWindow()); // parent window
+        popup.initOwner(wrapper.getScene().getWindow());
         popup.show();
     }
 
@@ -233,6 +248,6 @@ public class BookTicketScene {
     }
 
     public Parent getRoot() {
-        return root;
+        return wrapper;   // RETURN WRAPPER NOW
     }
 }
