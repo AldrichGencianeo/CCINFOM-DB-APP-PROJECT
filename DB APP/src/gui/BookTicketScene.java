@@ -17,7 +17,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class BookTicketScene {
-    private BorderPane wrapper;     // NEW: BorderPane
+    private BorderPane wrapper;
     private VBox root;
     private Connection connection;
     private MainMenuScene mainMenu;
@@ -33,7 +33,7 @@ public class BookTicketScene {
         this.connection = connection;
         this.mainMenu = mainMenu;
 
-        wrapper = new BorderPane();     // NEW
+        wrapper = new BorderPane();
 
         root = new VBox(10);
         root.setPadding(new Insets(20));
@@ -54,10 +54,7 @@ public class BookTicketScene {
         btnBook = new Button("Book Ticket");
         btnCancel = new Button("Cancel Ticket");
 
-        root.getChildren().addAll(
-                cbCustomer, cbEvent, cbSchedule, cbSection,
-                btnBook, btnCancel
-        );
+        root.getChildren().addAll(cbCustomer, cbEvent, cbSchedule, cbSection, btnBook, btnCancel);
 
         populateCustomers();
         populateEvents();
@@ -66,7 +63,6 @@ public class BookTicketScene {
         btnBook.setOnAction(e -> bookTicket());
         btnCancel.setOnAction(e -> cancelTicket());
 
-        // NEW: Add back button + scene content
         wrapper.setTop(SceneUtils.createBackButton(mainMenu, connection));
         wrapper.setCenter(root);
         BorderPane.setAlignment(root, Pos.CENTER);
@@ -76,6 +72,7 @@ public class BookTicketScene {
         try {
             CustomerDAO dao = new CustomerDAO(connection);
             List<model.Customer> customers = dao.viewAllCustomers();
+
             for (model.Customer c : customers) {
                 cbCustomer.getItems().add(c.getCustomerID() + " - " + c.getFirstName());
             }
@@ -103,7 +100,9 @@ public class BookTicketScene {
         cbSchedule.getItems().clear();
         cbSection.getItems().clear();
 
-        if (cbEvent.getValue() == null) return;
+        if (cbEvent.getValue() == null) {
+            return;
+        }
 
         int eventID = Integer.parseInt(cbEvent.getValue().split(" - ")[0]);
 
@@ -113,11 +112,12 @@ public class BookTicketScene {
                 FROM schedules s
                 WHERE s.eventID = ?
                 ORDER BY s.scheduleDate, s.startTime
-            """;
+                """;
 
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, eventID);
                 ResultSet rs = ps.executeQuery();
+
                 while (rs.next()) {
                     int scheduleID = rs.getInt("scheduleID");
                     cbSchedule.getItems().add(scheduleID + " - " +
@@ -135,7 +135,9 @@ public class BookTicketScene {
     private void populateSections() {
         cbSection.getItems().clear();
 
-        if (cbSchedule.getValue() == null) return;
+        if (cbSchedule.getValue() == null) {
+            return;
+        }
 
         int scheduleID = Integer.parseInt(cbSchedule.getValue().split(" - ")[0]);
 
@@ -145,11 +147,12 @@ public class BookTicketScene {
                 FROM schedule_section ss
                 JOIN section sec ON ss.sectionID = sec.sectionID
                 WHERE ss.scheduleID = ?
-            """;
+                """;
 
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, scheduleID);
                 ResultSet rs = ps.executeQuery();
+
                 while (rs.next()) {
                     int sectionID = rs.getInt("sectionID");
                     String sectionName = rs.getString("sectionname");
@@ -166,11 +169,9 @@ public class BookTicketScene {
 
     private void bookTicket() {
         try {
-            if (cbCustomer.getValue() == null ||
-                    cbSchedule.getValue() == null ||
-                    cbSection.getValue() == null) {
-
+            if (cbCustomer.getValue() == null || cbSchedule.getValue() == null || cbSection.getValue() == null) {
                 showAlert("Error", "Please select customer, schedule, and section.");
+
                 return;
             }
 
@@ -210,6 +211,7 @@ public class BookTicketScene {
 
         btnConfirm.setOnAction(e -> {
             String text = tfTicketID.getText();
+
             if (text == null || text.isEmpty()) {
                 showAlert("Error", "Enter ticket ID.");
                 return;
@@ -248,6 +250,6 @@ public class BookTicketScene {
     }
 
     public Parent getRoot() {
-        return wrapper;   // RETURN WRAPPER NOW
+        return wrapper;
     }
 }

@@ -105,6 +105,7 @@ public class BookTicketDAO {
         String updateTicketSQL = "UPDATE tickets SET status = 'CO' WHERE ticketID = ? AND status = 'P'";
         String selectEventMerchSQL = "SELECT merchandiseID FROM event_merch WHERE eventID = ? AND merchtype = 'Package'";
         String insertMerchReceiptSQL = "INSERT INTO merch_receipt (ticketID, customerID, eventID, merchandiseID, quantity, totalPrice, purchaseDate) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+        String updateMerchStockSQL = "UPDATE merchandise SET stock = stock - 1 WHERE merchandiseID = ?";
 
         boolean oldAutoCommit = connection.getAutoCommit();
 
@@ -200,7 +201,8 @@ public class BookTicketDAO {
 
             if (sectionName.equalsIgnoreCase("VIP")) {
                 try (PreparedStatement psMerch = connection.prepareStatement(selectEventMerchSQL);
-                     PreparedStatement psInsert = connection.prepareStatement(insertMerchReceiptSQL)) {
+                     PreparedStatement psInsert = connection.prepareStatement(insertMerchReceiptSQL);
+                     PreparedStatement psUpdateStock = connection.prepareStatement(updateMerchStockSQL)) {
                     psMerch.setInt(1, eventID);
 
                     try (ResultSet rs = psMerch.executeQuery()) {
@@ -214,10 +216,14 @@ public class BookTicketDAO {
                             psInsert.setInt(5, 1);
                             psInsert.setDouble(6, 0.0);
                             psInsert.addBatch();
+
+                            psUpdateStock.setInt(1, merchID);
+                            psUpdateStock.addBatch();
                         }
                     }
 
                     psInsert.executeBatch();
+                    psUpdateStock.executeBatch();
                 }
             }
 

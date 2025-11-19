@@ -99,6 +99,7 @@ public class MerchandiseDAO {
         return list;
     }
 
+    // View Related Events
     public List<Event> getRelatedEvents(int merchandiseID) throws SQLException {
         List<Event> events = new ArrayList<>();
 

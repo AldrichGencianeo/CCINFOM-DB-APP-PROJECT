@@ -92,46 +92,6 @@ public class ReportDAO {
         return months[month];
     }
 
-    public void displayMonthlyReport(int month, int year) throws SQLException {
-        EventScheduleReport report = generateMonthlyReport(month, year);
-
-        if (report == null || report.getTotalEvents() == 0) {
-            System.out.println("\n=== NO DATA FOUND FOR " + getMonthName(month) + " " + year + " ===");
-            return;
-        }
-
-        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
-        System.out.println("║         EVENT & SCHEDULE REPORT - MONTHLY                  ║");
-        System.out.println("╠════════════════════════════════════════════════════════════╣");
-        System.out.printf("║ Period: %-50s ║%n", report.getTimePeriod());
-        System.out.println("╠════════════════════════════════════════════════════════════╣");
-        System.out.printf("║ Total Number of Events:          %-25d ║%n", report.getTotalEvents());
-        System.out.printf("║ Average Booking Fee:             ₱%-24.2f ║%n", report.getAverageBookingFee());
-        System.out.printf("║ Total Number of Schedules:       %-25d ║%n", report.getTotalSchedules());
-        System.out.printf("║ Average Schedules per model.Event:     %-25.2f ║%n", report.getAverageSchedulesPerEvent());
-        System.out.println("╚════════════════════════════════════════════════════════════╝");
-    }
-
-    public void displayYearlyReport(int year) throws SQLException {
-        EventScheduleReport report = generateYearlyReport(year);
-
-        if (report == null || report.getTotalEvents() == 0) {
-            System.out.println("\n=== NO DATA FOUND FOR YEAR " + year + " ===");
-            return;
-        }
-
-        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
-        System.out.println("║         EVENT & SCHEDULE REPORT - YEARLY                   ║");
-        System.out.println("╠════════════════════════════════════════════════════════════╣");
-        System.out.printf("║ Period: %-50s ║%n", report.getTimePeriod());
-        System.out.println("╠════════════════════════════════════════════════════════════╣");
-        System.out.printf("║ Total Number of Events:          %-25d ║%n", report.getTotalEvents());
-        System.out.printf("║ Average Booking Fee:             ₱%-24.2f ║%n", report.getAverageBookingFee());
-        System.out.printf("║ Total Number of Schedules:       %-25d ║%n", report.getTotalSchedules());
-        System.out.printf("║ Average Schedules per model.Event:     %-25.2f ║%n", report.getAverageSchedulesPerEvent());
-        System.out.println("╚════════════════════════════════════════════════════════════╝");
-    }
-
     public List<String> getAvailableMonths() throws SQLException {
         List<String> months = new ArrayList<>();
         String sql = """
@@ -168,6 +128,11 @@ public class ReportDAO {
         return years;
     }
 
+    /*
+     * ==========================
+     * MERCH SALES REPORT
+     * ==========================
+     */
     public List<MerchSalesReport> generateReportPerEvent(int eventID) {
         List<MerchReceipt> receipts = merchReceiptRepo.findByEventID(eventID);
         Map<Integer, Integer> soldCount = new HashMap<>();

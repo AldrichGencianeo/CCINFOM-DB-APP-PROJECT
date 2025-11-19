@@ -28,15 +28,12 @@ public class MerchandiseScene {
         this.connection = connection;
         root = new BorderPane();
 
-        // Back button
         HBox backButton = SceneUtils.createBackButton(mainMenu, connection);
         root.setTop(backButton);
 
-        // Create table but DO NOT SHOW it initially
         merchandiseTable = new TableView<>();
         setupTable();
 
-        // Centered buttons (like MainMenuScene)
         VBox menuBox = new VBox(15);
         menuBox.setPadding(new Insets(20));
         menuBox.setAlignment(Pos.CENTER);
@@ -59,10 +56,8 @@ public class MerchandiseScene {
                 btnAdd, btnUpdate, btnDelete, btnView, btnViewAll, btnViewEvents
         );
 
-        // Set centered layout as default
         root.setCenter(menuBox);
 
-        // Actions
         btnAdd.setOnAction(e -> addMerch());
         btnUpdate.setOnAction(e -> updateMerch());
         btnDelete.setOnAction(e -> deleteMerch());
@@ -131,27 +126,13 @@ public class MerchandiseScene {
             stage.close();
         });
 
-        layout.getChildren().addAll(
-                new Label(title),
-                table,
-                new HBox(10, selectBtn, cancelBtn)
-        );
+        layout.getChildren().addAll(new Label(title), table, new HBox(10, selectBtn, cancelBtn));
 
         stage.setScene(new Scene(layout, 400, 300));
         stage.setTitle(title);
         stage.showAndWait();
 
         return selected[0];
-    }
-
-    private void loadMerchandise() {
-        try {
-            MerchandiseDAO dao = new MerchandiseDAO(connection);
-            List<Merchandise> merchandiseList = dao.viewAllMerchandise();
-            merchandiseTable.getItems().setAll(merchandiseList);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     private void addMerch() {
@@ -186,10 +167,7 @@ public class MerchandiseScene {
             }
         });
 
-        layout.getChildren().addAll(
-                new Label("Add Merchandise"),
-                txtName, txtPrice, txtStock, cmbCategory, btnSave
-        );
+        layout.getChildren().addAll(new Label("Add Merchandise"), txtName, txtPrice, txtStock, cmbCategory, btnSave);
 
         stage.setScene(new Scene(layout, 300, 250));
         stage.setTitle("Add Merchandise");
@@ -198,7 +176,10 @@ public class MerchandiseScene {
 
     private void updateMerch() {
         Merchandise selected = openSelectionDialog("Select Merchandise to Update");
-        if (selected == null) return;
+
+        if (selected == null) {
+            return;
+        }
 
         Stage stage = new Stage();
         VBox layout = new VBox(10);
@@ -228,10 +209,7 @@ public class MerchandiseScene {
             }
         });
 
-        layout.getChildren().addAll(
-                new Label("Update Merchandise"),
-                txtName, txtPrice, txtStock, cmbCategory, btnSave
-        );
+        layout.getChildren().addAll(new Label("Update Merchandise"), txtName, txtPrice, txtStock, cmbCategory, btnSave);
 
         stage.setScene(new Scene(layout, 300, 250));
         stage.setTitle("Update Merchandise");
@@ -240,7 +218,10 @@ public class MerchandiseScene {
 
     private void deleteMerch() {
         Merchandise selected = openSelectionDialog("Select Merchandise to Delete");
-        if (selected == null) return;
+
+        if (selected == null) {
+            return;
+        }
 
         try {
             MerchandiseDAO dao = new MerchandiseDAO(connection);
@@ -253,7 +234,10 @@ public class MerchandiseScene {
 
     private void viewMerch() {
         Merchandise selected = openSelectionDialog("Select Merchandise to View");
-        if (selected == null) return;
+
+        if (selected == null) {
+            return;
+        }
 
         try {
             MerchandiseDAO dao = new MerchandiseDAO(connection);
@@ -295,7 +279,6 @@ public class MerchandiseScene {
         Label title = new Label("All Merchandise Records");
         TableView<Merchandise> table = new TableView<>();
 
-        // Columns
         TableColumn<Merchandise, Integer> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("MerchandiseID"));
 
@@ -333,7 +316,10 @@ public class MerchandiseScene {
 
     private void viewRelatedEvents() {
         Merchandise selected = openSelectionDialog("Select Merchandise to View Related Events");
-        if (selected == null) return;
+
+        if (selected == null) {
+            return;
+        }
 
         Stage stage = new Stage();
         VBox layout = new VBox(10);

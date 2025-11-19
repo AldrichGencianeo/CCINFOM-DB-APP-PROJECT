@@ -41,7 +41,7 @@ public class MainMenuScene {
         menuBox.getChildren().addAll(btnEvents, btnMerchandise, btnSections, btnBookTicket, btnSchedules, btnMerchTrans, btnReports);
         root.setCenter(menuBox);
 
-        // Manage Events - NOW ENABLED
+        // Manage Events
         btnEvents.setOnAction(e -> {
             EventScene scene = new EventScene(connection, this);
             // Clear the root completely and set the new scene
