@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS `dbapp`.`Schedule_Section` (
   CONSTRAINT `fk_Schedule_Section_Schedules1`
     FOREIGN KEY (`scheduleID`)
     REFERENCES `dbapp`.`Schedules` (`scheduleID`)
-    ON DELETE NO ACTION -- try cascade if not work
+    ON DELETE CASCADE -- try cascade if not work
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
