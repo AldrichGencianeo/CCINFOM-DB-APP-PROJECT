@@ -8,17 +8,17 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 public class MainMenuScene {
     private BorderPane root;
     private Connection connection;
+    private VBox menuBox;
 
     public MainMenuScene(Connection connection) {
         this.connection = connection;
         root = new BorderPane();
 
-        VBox menuBox = new VBox(15);
+        menuBox = new VBox(15);
         menuBox.setPadding(new Insets(20));
         menuBox.setAlignment(Pos.CENTER);
 
@@ -41,16 +41,28 @@ public class MainMenuScene {
         menuBox.getChildren().addAll(btnEvents, btnMerchandise, btnSections, btnBookTicket, btnSchedules, btnMerchTrans, btnReports);
         root.setCenter(menuBox);
 
-        // Manage Events
-//        btnEvents.setOnAction(e -> {
-//            EventScene scene = new EventScene(connection, this);
-//            root.getChildren().setAll(scene.getRoot());
-//        });
+        // Manage Events - NOW ENABLED
+        btnEvents.setOnAction(e -> {
+            EventScene scene = new EventScene(connection, this);
+            // Clear the root completely and set the new scene
+            root.setTop(null);
+            root.setCenter(null);
+            root.setBottom(null);
+            root.setLeft(null);
+            root.setRight(null);
+            root.setCenter(scene.getRoot());
+        });
 
         // Manage Merchandise
         btnMerchandise.setOnAction(e -> {
             MerchandiseScene scene = new MerchandiseScene(connection, this);
-            root.getChildren().setAll(scene.getRoot());
+            // Clear the root completely and set the new scene
+            root.setTop(null);
+            root.setCenter(null);
+            root.setBottom(null);
+            root.setLeft(null);
+            root.setRight(null);
+            root.setCenter(scene.getRoot());
         });
 
         // Manage Sections
@@ -60,10 +72,10 @@ public class MainMenuScene {
 //        });
 
         // Book Ticket
-        btnBookTicket.setOnAction(e -> {
-            BookTicketScene scene = new BookTicketScene(connection, this);
-            root.setCenter(scene.getRoot());
-        });
+//        btnBookTicket.setOnAction(e -> {
+//            BookTicketScene scene = new BookTicketScene(connection, this);
+//            root.getChildren().setAll(scene.getRoot());
+//        });
 
         // Manage Schedules
 //        btnSchedules.setOnAction(e -> {
@@ -82,6 +94,14 @@ public class MainMenuScene {
 //            ReportsScene scene = new ReportsScene(connection, this);
 //            root.getChildren().setAll(scene.getRoot());
 //        });
+    }
+
+    public void showMainMenu() {
+        root.setTop(null);
+        root.setBottom(null);
+        root.setLeft(null);
+        root.setRight(null);
+        root.setCenter(menuBox);
     }
 
     public Parent getRoot() {
